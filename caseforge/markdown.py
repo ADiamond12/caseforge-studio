@@ -1,0 +1,117 @@
+from __future__ import annotations
+
+from datetime import datetime
+
+from .models import ArchitectResult, EvaluatorResult, PlannerResult, ProjectBrief, ProviderOverlay, StorytellerResult
+
+
+def render_markdown(
+    brief: ProjectBrief,
+    planner: PlannerResult,
+    architect: ArchitectResult,
+    evaluator: EvaluatorResult,
+    storyteller: StorytellerResult,
+    *,
+    created_at: datetime,
+    provider_status: str = "deterministic",
+    provider_message: str = "Deterministic pipeline used.",
+    provider_overlay: ProviderOverlay | None = None,
+) -> str:
+    lines: list[str] = [
+        f"# {planner.title}",
+        "",
+        "## Snapshot",
+        f"- Created: {created_at.astimezone().isoformat()}",
+        f"- Audience: {brief.audience}",
+        f"- Mode: {brief.mode}",
+        f"- Goal: {brief.goal}",
+        f"- Preset: {brief.preset}",
+        f"- Provider: {brief.provider}",
+        f"- Provider status: {provider_status}",
+        f"- Score: {evaluator.overall_score}/100",
+        "",
+        "## Provider Notes",
+        provider_message,
+        "",
+        "## Brief",
+        brief.brief.strip(),
+        "",
+        "## Planner",
+        f"- Objective: {planner.objective}",
+        f"- Themes: {', '.join(planner.themes)}",
+        "",
+        "### Assumptions",
+        *[f"- {item}" for item in planner.assumptions],
+        "",
+        "### Success Metrics",
+        *[f"- {item}" for item in planner.success_metrics],
+        "",
+        "### Scope",
+        *[f"- {item}" for item in planner.scope],
+        "",
+        "### Delivery Plan",
+        *[f"- {item}" for item in planner.delivery_plan],
+        "",
+        "## Architecture",
+        architect.architecture_summary,
+        "",
+        "### Modules",
+        *[f"- {item}" for item in architect.modules],
+        "",
+        "### Data Flow",
+        *[f"- {item}" for item in architect.data_flow],
+        "",
+        "### API Surface",
+        *[f"- {item}" for item in architect.api_surface],
+        "",
+        "### Persistence",
+        *[f"- {item}" for item in architect.persistence_plan],
+        "",
+        "### Implementation Notes",
+        *[f"- {item}" for item in architect.implementation_notes],
+        "",
+        "## Evaluation",
+        f"Recommendation: {evaluator.recommendation}",
+        "",
+        "### Strengths",
+        *[f"- {item}" for item in evaluator.strengths],
+        "",
+        "### Risks",
+        *[f"- {item}" for item in evaluator.risks],
+        "",
+        "### Mitigations",
+        *[f"- {item}" for item in evaluator.mitigations],
+        "",
+        "## Interview Pitch",
+        storyteller.elevator_pitch,
+        "",
+        f"Hook: {storyteller.interviewer_hook}",
+        "",
+        "### Demo Script",
+        *[f"- {item}" for item in storyteller.demo_script],
+        "",
+        "### Talking Points",
+        *[f"- {item}" for item in storyteller.talking_points],
+        "",
+    ]
+    if provider_overlay is not None:
+        lines.extend(
+            [
+                "## Live Provider Overlay",
+                provider_overlay.summary,
+                "",
+                "### Overlay Insights",
+                *[f"- {item}" for item in provider_overlay.insights],
+                "",
+                "### Overlay Sections",
+            ]
+        )
+        for section in provider_overlay.sections:
+            lines.extend(
+                [
+                    f"#### {section.label}: {section.title}",
+                    section.body,
+                    "",
+                ]
+            )
+    return "\n".join(lines).rstrip() + "\n"

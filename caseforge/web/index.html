@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CaseForge Studio</title>
+  <meta
+    name="description"
+    content="CaseForge Studio turns a rough project idea into a polished interview-ready dossier."
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+  <div class="grid-noise" aria-hidden="true"></div>
+
+  <header class="hero shell">
+    <div class="hero-copy">
+      <p class="eyebrow">CaseForge Studio</p>
+      <h1>Turn a rough idea into an interview-ready project dossier.</h1>
+      <p class="lede">
+        Draft a concept, generate a structured plan, and present it like a product team had already
+        debated the tradeoffs for you.
+      </p>
+      <div class="hero-badges" aria-label="Key features">
+        <span>Static UI</span>
+        <span>Live API</span>
+        <span>Markdown export</span>
+        <span>Responsive</span>
+      </div>
+    </div>
+
+    <aside class="hero-card glass">
+      <p class="card-label">What the app produces</p>
+      <ul class="promise-list">
+        <li>Executive summary with a crisp product angle</li>
+        <li>Problem, audience, and differentiation breakdown</li>
+        <li>Architecture, risks, and interview talking points</li>
+      </ul>
+    </aside>
+  </header>
+
+  <main class="shell workspace">
+    <section class="panel composer glass">
+      <div class="panel-header">
+        <div>
+          <p class="card-label">Brief studio</p>
+          <h2>Start with one sentence, or something messier.</h2>
+        </div>
+        <span class="status-chip" id="transport-chip">Backend: idle</span>
+      </div>
+
+      <form id="brief-form" class="brief-form">
+        <label for="project-brief" class="field">
+          <span>Project idea</span>
+          <textarea
+            id="project-brief"
+            name="projectBrief"
+            rows="8"
+            placeholder="Example: Build an AI interview coach that turns a job description, resume, and a portfolio into a rehearsal plan with mock questions, STAR story prompts, and a confidence score."
+            required
+          ></textarea>
+        </label>
+
+        <div class="field-grid">
+          <label class="field" for="audience">
+            <span>Audience</span>
+            <select id="audience" name="audience">
+              <option value="Hiring manager">Hiring manager</option>
+              <option value="Engineering lead">Engineering lead</option>
+              <option value="Startup founder">Startup founder</option>
+              <option value="Internal team">Internal team</option>
+            </select>
+          </label>
+
+          <label class="field" for="mode">
+            <span>Project type</span>
+            <select id="mode" name="mode">
+              <option value="AI assistant">AI assistant</option>
+              <option value="Developer tool">Developer tool</option>
+              <option value="Workflow product">Workflow product</option>
+              <option value="Study companion">Study companion</option>
+            </select>
+          </label>
+
+          <label class="field" for="goal">
+            <span>Interview goal</span>
+            <select id="goal" name="goal">
+              <option value="Show systems thinking">Show systems thinking</option>
+              <option value="Show product taste">Show product taste</option>
+              <option value="Show AI judgment">Show AI judgment</option>
+              <option value="Show shipping discipline">Show shipping discipline</option>
+            </select>
+          </label>
+
+          <label class="field" for="preset">
+            <span>Review preset</span>
+            <select id="preset" name="preset">
+              <option value="general">General</option>
+              <option value="product">Product</option>
+              <option value="ml">ML</option>
+              <option value="full-stack">Full-stack</option>
+              <option value="founder">Founder</option>
+            </select>
+          </label>
+
+          <label class="field" for="provider">
+            <span>Provider</span>
+            <select id="provider" name="provider">
+              <option value="deterministic">Deterministic</option>
+              <option value="openai">OpenAI</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="preset-row" aria-label="Preset prompts">
+          <button class="preset" type="button" data-preset="ai-coach">AI interview coach</button>
+          <button class="preset" type="button" data-preset="ops-brief">Ops copilot</button>
+          <button class="preset" type="button" data-preset="study-lens">Study lens</button>
+          <button class="preset" type="button" data-preset="founder-note">Founder note</button>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary">Forge dossier</button>
+          <button type="button" id="preview-button" class="secondary">Preview only</button>
+          <button type="button" id="demo-button" class="secondary">Load demo</button>
+          <button type="button" id="copy-brief-button" class="ghost">Copy brief</button>
+        </div>
+
+        <p class="helper" id="brief-meta">0 words - ready for a first pass.</p>
+        <p class="status-line" id="status" role="status" aria-live="polite">
+          Enter a project idea, then generate a dossier.
+        </p>
+      </form>
+
+      <section class="recent-panel">
+        <div class="mini-panel-header">
+          <div>
+            <p class="card-label">Recent dossiers</p>
+            <h3>Saved runs from this workspace</h3>
+          </div>
+          <button type="button" id="refresh-recent-button" class="ghost compact">Refresh</button>
+        </div>
+        <p class="recent-helper">
+          Compare runs by score, preset, provider path, and recommendation before opening a full dossier.
+        </p>
+        <div class="recent-list" id="recent-list">
+          <p class="recent-empty">No saved dossiers yet.</p>
+        </div>
+        <section class="compare-panel">
+          <div class="mini-panel-header">
+            <div>
+              <p class="card-label">Run comparison</p>
+              <h3>Review two saved dossiers side by side</h3>
+            </div>
+          </div>
+          <p class="recent-helper" id="compare-selection">Select up to two saved runs to compare.</p>
+          <div class="compare-actions">
+            <button type="button" id="compare-button" class="secondary compact" disabled>Compare selected</button>
+            <button type="button" id="clear-compare-button" class="ghost compact">Clear</button>
+          </div>
+          <div class="compare-result" id="compare-result">
+            <p class="recent-empty">No comparison loaded yet.</p>
+          </div>
+        </section>
+      </section>
+    </section>
+
+    <section class="panel dossier glass" aria-live="polite">
+      <div class="panel-header dossier-header">
+        <div>
+          <p class="card-label">Generated dossier</p>
+          <h2 id="dossier-title">Waiting for a brief</h2>
+        </div>
+        <div class="status-stack">
+          <span class="status-chip" id="markdown-chip">Markdown: unavailable</span>
+          <span class="status-chip subtle" id="source-chip">Source: local demo</span>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <p class="card-label">Executive summary</p>
+        <p id="dossier-summary">
+          The output will appear here, broken into readable sections with enough clarity for an
+          interviewer to scan in under a minute.
+        </p>
+      </div>
+
+      <div class="insight-row" id="insight-row"></div>
+
+      <div class="section-grid" id="section-grid"></div>
+
+      <div class="footer-strip">
+        <div>
+          <p class="card-label">Markdown path</p>
+          <code id="markdown-path">No export path yet.</code>
+        </div>
+        <button type="button" id="copy-markdown-button" class="ghost">Copy path</button>
+      </div>
+    </section>
+  </main>
+
+  <template id="section-template">
+    <article class="section-card glass">
+      <p class="card-label section-eyebrow"></p>
+      <h3></h3>
+      <p class="section-body"></p>
+    </article>
+  </template>
+
+  <script src="./app.js"></script>
+</body>
+</html>

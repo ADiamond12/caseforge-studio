@@ -1,0 +1,669 @@
+const briefForm = document.getElementById('brief-form');
+const projectBrief = document.getElementById('project-brief');
+const audience = document.getElementById('audience');
+const mode = document.getElementById('mode');
+const goal = document.getElementById('goal');
+const preset = document.getElementById('preset');
+const provider = document.getElementById('provider');
+const briefMeta = document.getElementById('brief-meta');
+const statusLine = document.getElementById('status');
+const transportChip = document.getElementById('transport-chip');
+const markdownChip = document.getElementById('markdown-chip');
+const sourceChip = document.getElementById('source-chip');
+const markdownPath = document.getElementById('markdown-path');
+const dossierTitle = document.getElementById('dossier-title');
+const dossierSummary = document.getElementById('dossier-summary');
+const insightRow = document.getElementById('insight-row');
+const sectionGrid = document.getElementById('section-grid');
+const sectionTemplate = document.getElementById('section-template');
+const previewButton = document.getElementById('preview-button');
+const refreshRecentButton = document.getElementById('refresh-recent-button');
+const recentList = document.getElementById('recent-list');
+const compareSelectionLabel = document.getElementById('compare-selection');
+const compareButton = document.getElementById('compare-button');
+const clearCompareButton = document.getElementById('clear-compare-button');
+const compareResult = document.getElementById('compare-result');
+let recentDossiers = [];
+const compareSelection = new Set();
+
+const presetBriefs = {
+  'ai-coach': {
+    brief:
+      'Build an AI interview coach that turns a job description, resume, and portfolio into a rehearsal plan with mock questions, STAR story prompts, and a confidence score.',
+    audience: 'Hiring manager',
+    mode: 'AI assistant',
+    goal: 'Show AI judgment',
+    preset: 'ml',
+    provider: 'deterministic',
+  },
+  'ops-brief': {
+    brief:
+      'Create an operations copilot that summarizes incidents, drafts a retrospective, proposes follow-up actions, and keeps the team aligned after every escalation.',
+    audience: 'Engineering lead',
+    mode: 'Workflow product',
+    goal: 'Show systems thinking',
+    preset: 'full-stack',
+    provider: 'deterministic',
+  },
+  'study-lens': {
+    brief:
+      'Design a study companion that turns lecture notes, slides, and saved links into quizzes, revision plans, and memory-friendly summaries for exam prep.',
+    audience: 'Internal team',
+    mode: 'Study companion',
+    goal: 'Show product taste',
+    preset: 'product',
+    provider: 'deterministic',
+  },
+  'founder-note': {
+    brief:
+      'Ship a founder note-taking app that converts messy voice captures into weekly priorities, investor updates, and a clean decision log.',
+    audience: 'Startup founder',
+    mode: 'Developer tool',
+    goal: 'Show shipping discipline',
+    preset: 'founder',
+    provider: 'deterministic',
+  },
+};
+
+function bootstrap() {
+  const savedBrief = readStoredValue('caseforge:lastBrief');
+  if (savedBrief) {
+    projectBrief.value = savedBrief;
+  } else {
+    loadPreset('ai-coach');
+  }
+
+  updateMeta();
+  renderDossier(buildLocalDossier(buildPayload()), { source: 'local demo' });
+  setStatus('Local demo dossier loaded. Use Preview or Create dossier to run the backend.', 'pending');
+  renderCompareSelectionState();
+  refreshRecentDossiers();
+  document.documentElement.classList.add('ready');
+}
+
+function buildPayload() {
+  return {
+    brief: projectBrief.value.trim(),
+    audience: audience.value,
+    mode: mode.value,
+    goal: goal.value,
+    preset: preset.value,
+    provider: provider.value,
+  };
+}
+
+function loadPreset(name) {
+  const next = presetBriefs[name];
+  if (!next) return;
+  projectBrief.value = next.brief;
+  audience.value = next.audience;
+  mode.value = next.mode;
+  goal.value = next.goal;
+  preset.value = next.preset;
+  provider.value = next.provider;
+  updateMeta();
+}
+
+function updateMeta() {
+  const words = tokenize(projectBrief.value).length;
+  briefMeta.textContent = `${words} word${words === 1 ? '' : 's'} - ${words < 20 ? 'add more context' : 'ready for a first pass'}.`;
+}
+
+function tokenize(text) {
+  return text.trim().split(/\s+/).filter(Boolean);
+}
+
+function readStoredValue(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredValue(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+function normalizeDossier(payload, fallbackMeta = {}) {
+  const raw = payload?.title || payload?.summary || payload?.sections ? payload : (payload?.dossier ?? payload ?? {});
+  const markdownPathValue =
+    payload?.markdownPath ??
+    payload?.markdown_path ??
+    raw?.markdownPath ??
+    raw?.markdown_path ??
+    fallbackMeta.markdownPath ??
+    '';
+
+  const sections = Array.isArray(raw.sections) && raw.sections.length
+    ? raw.sections.map((section, index) => ({
+        label: section.label || `Section ${index + 1}`,
+        title: section.title || section.label || `Section ${index + 1}`,
+        body: section.body || section.content || '',
+      }))
+    : [];
+
+  return {
+    title: raw.title || 'Untitled dossier',
+    summary: raw.summary || 'No summary returned by the backend.',
+    insights: Array.isArray(raw.insights) ? raw.insights : [],
+    sections,
+    markdownPath: markdownPathValue,
+    persisted: payload?.persisted ?? raw?.persisted ?? Boolean(markdownPathValue),
+    preview: payload?.preview ?? raw?.preview ?? false,
+    providerStatus: payload?.providerStatus ?? payload?.provider_status ?? raw?.providerStatus ?? raw?.provider_status ?? 'deterministic',
+    provider: payload?.provider ?? raw?.provider ?? raw?.brief?.provider ?? 'deterministic',
+  };
+}
+
+function renderDossier(payload, meta = {}) {
+  const dossier = normalizeDossier(payload, meta);
+  dossierTitle.textContent = dossier.title;
+  dossierSummary.textContent = dossier.summary;
+  markdownPath.textContent = dossier.markdownPath || 'No export path yet.';
+  markdownChip.textContent = dossier.persisted ? 'Markdown: ready' : 'Markdown: preview only';
+  sourceChip.textContent = `Source: ${meta.source || 'backend'}`;
+  transportChip.textContent = meta.source === 'local demo'
+    ? 'Backend: demo seed'
+    : `Backend: ${dossier.provider} (${dossier.providerStatus})`;
+
+  insightRow.innerHTML = '';
+  const insights = dossier.insights.length
+    ? dossier.insights
+    : ['Keep the first release narrow.', 'Show the tradeoffs clearly.', 'Make the demo repeatable.'];
+  insights.slice(0, 4).forEach((insight) => {
+    const node = document.createElement('span');
+    node.className = 'pill';
+    node.textContent = insight;
+    insightRow.appendChild(node);
+  });
+
+  sectionGrid.innerHTML = '';
+  dossier.sections.forEach((section, index) => {
+    const card = sectionTemplate.content.firstElementChild.cloneNode(true);
+    card.style.setProperty('--delay', `${index * 70}ms`);
+    card.querySelector('.section-eyebrow').textContent = section.label;
+    card.querySelector('h3').textContent = section.title;
+    card.querySelector('.section-body').textContent = section.body;
+    sectionGrid.appendChild(card);
+  });
+}
+
+async function requestDossier(endpoint, messages) {
+  const payload = buildPayload();
+  if (!payload.brief) {
+    setStatus('Enter a project idea first.', 'warning');
+    return;
+  }
+
+  writeStoredValue('caseforge:lastBrief', payload.brief);
+  setStatus(messages.pending, 'pending');
+  transportChip.textContent = 'Backend: connecting';
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    renderDossier(data, { source: messages.source });
+    setStatus(messages.success, 'success');
+    if (endpoint === '/api/dossiers') {
+      refreshRecentDossiers();
+    }
+  } catch (error) {
+    transportChip.textContent = 'Backend: unavailable';
+    sourceChip.textContent = 'Source: last successful render';
+    markdownChip.textContent = 'Markdown: unavailable';
+    markdownPath.textContent = 'No export path available while the backend is unavailable.';
+    setStatus(`${messages.failure} ${error.message}`, 'warning');
+  }
+}
+
+function buildLocalDossier(payload) {
+  const brief = payload.brief.toLowerCase();
+  const theme = detectTheme(brief);
+  return {
+    title: theme.title,
+    summary:
+      `This project turns ${theme.user} pain into a focused ${payload.mode.toLowerCase()} that helps a ${payload.audience.toLowerCase()} see clear outcomes and a believable shipping plan.`,
+    insights: [
+      `Audience: ${payload.audience}`,
+      `Mode: ${payload.mode}`,
+      `Goal: ${payload.goal}`,
+      `Preset: ${payload.preset}`,
+      `Provider: ${payload.provider}`,
+    ],
+    sections: [
+      {
+        label: 'Problem',
+        title: 'The user pain',
+        body: theme.problem,
+      },
+      {
+        label: 'Approach',
+        title: 'The product angle',
+        body: theme.approach,
+      },
+      {
+        label: 'Architecture',
+        title: 'The build plan',
+        body: 'A local web app calls a deterministic dossier pipeline and renders a concise artifact for interview review.',
+      },
+      {
+        label: 'Tradeoffs',
+        title: 'What to manage',
+        body: 'Keep the first release narrow and make dossier quality the thesis of the product.',
+      },
+      {
+        label: 'Interview story',
+        title: 'How to explain it',
+        body: 'Lead with the problem, then the pipeline, then the scope cuts that made the demo credible.',
+      },
+    ],
+    persisted: false,
+    preview: true,
+    markdownPath: '',
+  };
+}
+
+function detectTheme(text) {
+  if (text.includes('interview') || text.includes('resume') || text.includes('hiring')) {
+    return {
+      title: 'Signal Studio',
+      user: 'candidate',
+      problem: 'Candidates struggle to present scattered experience as a coherent, repeatable story.',
+      approach: 'A guided rehearsal workflow converts raw material into a stronger project narrative and better mock sessions.',
+    };
+  }
+  if (text.includes('study') || text.includes('lecture') || text.includes('exam')) {
+    return {
+      title: 'Study Arc',
+      user: 'student',
+      problem: 'Students collect notes and links, but the material rarely turns into a revision system.',
+      approach: 'An AI study companion turns passive content into quizzes, summaries, and a revision cadence that is easy to follow.',
+    };
+  }
+  if (text.includes('incident') || text.includes('ops') || text.includes('retrospective')) {
+    return {
+      title: 'Ops Frame',
+      user: 'operator',
+      problem: 'Operational work is fast, messy, and difficult to summarize after the moment has passed.',
+      approach: 'A workflow copilot captures context, suggests actions, and keeps the follow-up work visible.',
+    };
+  }
+
+  return {
+    title: 'ForgeLine',
+    user: 'builder',
+    problem: 'Good ideas usually arrive before the structure that makes them believable.',
+    approach: 'A focused AI product converts ambiguity into an artifact that can be reviewed, iterated, and discussed.',
+  };
+}
+
+async function refreshRecentDossiers() {
+  try {
+    const response = await fetch('/api/dossiers?limit=8', {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    recentDossiers = data.items || [];
+    pruneCompareSelection();
+    renderRecentDossiers(recentDossiers);
+    renderCompareSelectionState();
+  } catch {
+    recentDossiers = [];
+    compareSelection.clear();
+    renderRecentDossiers([]);
+    renderCompareSelectionState();
+  }
+}
+
+function renderRecentDossiers(items) {
+  recentList.innerHTML = '';
+  if (!items.length) {
+    const empty = document.createElement('p');
+    empty.className = 'recent-empty';
+    empty.textContent = 'No saved dossiers yet.';
+    recentList.appendChild(empty);
+    return;
+  }
+
+  items.forEach((item) => {
+    const selected = compareSelection.has(item.slug);
+    const card = document.createElement('article');
+    card.className = `recent-item${selected ? ' is-selected' : ''}`;
+
+    const header = document.createElement('div');
+    header.className = 'recent-item-header';
+
+    const title = document.createElement('strong');
+    title.textContent = item.title;
+
+    const timestamp = document.createElement('span');
+    timestamp.className = 'recent-timestamp';
+    timestamp.textContent = formatTimestamp(item.created_at);
+    header.append(title, timestamp);
+
+    const meta = document.createElement('div');
+    meta.className = 'recent-item-meta';
+    meta.append(
+      buildRecentChip(item.score || 'unknown', 'score'),
+      buildRecentChip(item.recommendation || 'unknown', 'recommendation'),
+      buildRecentChip(item.preset || 'general', 'preset'),
+      buildRecentChip(formatProviderLabel(item), 'provider'),
+    );
+
+    const slug = document.createElement('span');
+    slug.className = 'recent-timestamp';
+    slug.textContent = item.slug;
+
+    const summary = document.createElement('p');
+    summary.className = 'recent-item-summary';
+    summary.textContent = item.summary || `Goal: ${item.goal || 'unknown'}.`;
+
+    const footer = document.createElement('div');
+    footer.className = 'recent-item-footer';
+    footer.append(slug);
+
+    const actions = document.createElement('div');
+    actions.className = 'recent-actions';
+
+    const openButton = document.createElement('button');
+    openButton.type = 'button';
+    openButton.className = 'recent-action';
+    openButton.textContent = 'Open dossier';
+    openButton.addEventListener('click', () => loadSavedDossier(item.slug));
+
+    const compareToggle = document.createElement('button');
+    compareToggle.type = 'button';
+    compareToggle.className = `recent-action${selected ? ' selected' : ''}`;
+    compareToggle.textContent = selected ? 'Selected for compare' : 'Select for compare';
+    compareToggle.disabled = !selected && compareSelection.size >= 2;
+    compareToggle.addEventListener('click', () => toggleCompareSelection(item.slug));
+
+    actions.append(openButton, compareToggle);
+    footer.append(actions);
+    card.append(header, meta, summary, footer);
+    recentList.appendChild(card);
+  });
+}
+
+function buildRecentChip(value, label) {
+  const chip = document.createElement('span');
+  chip.className = 'recent-chip';
+  chip.textContent = `${label}: ${value}`;
+  return chip;
+}
+
+function formatProviderLabel(item) {
+  const providerName = item.provider || 'deterministic';
+  const providerStatus = item.provider_status || 'deterministic';
+  return `${providerName} (${providerStatus})`;
+}
+
+function formatTimestamp(value) {
+  if (!value) {
+    return 'unknown time';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString([], {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function pruneCompareSelection() {
+  const validSlugs = new Set(recentDossiers.map((item) => item.slug));
+  [...compareSelection].forEach((slug) => {
+    if (!validSlugs.has(slug)) {
+      compareSelection.delete(slug);
+    }
+  });
+}
+
+function toggleCompareSelection(slug) {
+  if (compareSelection.has(slug)) {
+    compareSelection.delete(slug);
+  } else if (compareSelection.size < 2) {
+    compareSelection.add(slug);
+  } else {
+    setStatus('Select at most two saved dossiers for comparison.', 'warning');
+    return;
+  }
+
+  renderRecentDossiers(recentDossiers);
+  renderCompareSelectionState();
+}
+
+function renderCompareSelectionState() {
+  const selected = [...compareSelection];
+  compareButton.disabled = selected.length !== 2;
+
+  if (!selected.length) {
+    compareSelectionLabel.textContent = 'Select up to two saved runs to compare.';
+    return;
+  }
+
+  compareSelectionLabel.textContent =
+    selected.length === 1
+      ? `Selected: ${selected[0]}. Choose one more run to compare.`
+      : `Ready to compare: ${selected[0]} vs ${selected[1]}.`;
+}
+
+async function runComparison() {
+  const selected = [...compareSelection];
+  if (selected.length !== 2) {
+    setStatus('Pick exactly two saved dossiers before comparing them.', 'warning');
+    return;
+  }
+
+  setStatus('Loading dossier comparison...', 'pending');
+  try {
+    const params = new URLSearchParams();
+    selected.forEach((slug) => params.append('slug', slug));
+    const response = await fetch(`/api/dossiers/compare?${params.toString()}`, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    renderComparison(data);
+    setStatus('Comparison loaded from saved dossiers.', 'success');
+  } catch (error) {
+    renderComparison(null);
+    setStatus(`Could not compare saved dossiers. ${error.message}`, 'warning');
+  }
+}
+
+function renderComparison(payload) {
+  compareResult.innerHTML = '';
+  if (!payload || !Array.isArray(payload.items) || payload.items.length !== 2) {
+    const empty = document.createElement('p');
+    empty.className = 'recent-empty';
+    empty.textContent = 'No comparison loaded yet.';
+    compareResult.appendChild(empty);
+    return;
+  }
+
+  const summary = document.createElement('p');
+  summary.className = 'compare-summary';
+  summary.textContent = payload.summary || 'Comparison loaded.';
+  compareResult.appendChild(summary);
+
+  const grid = document.createElement('div');
+  grid.className = 'compare-grid';
+
+  payload.items.forEach((item) => {
+    const card = document.createElement('article');
+    card.className = `compare-card${payload.winner_slug === item.slug ? ' is-winner' : ''}`;
+
+    const title = document.createElement('h4');
+    title.textContent = item.title;
+
+    const slug = document.createElement('p');
+    slug.className = 'recent-timestamp';
+    slug.textContent = item.slug;
+
+    const summaryText = document.createElement('p');
+    summaryText.textContent = item.summary;
+
+    const facts = document.createElement('dl');
+    facts.className = 'compare-kv';
+    facts.append(
+      buildCompareRow('Score', item.score),
+      buildCompareRow('Recommendation', item.recommendation),
+      buildCompareRow('Preset', item.preset),
+      buildCompareRow('Provider', `${item.provider} (${item.provider_status})`),
+      buildCompareRow('Goal', item.goal),
+      buildCompareRow('Top strength', item.top_strength),
+      buildCompareRow('Top risk', item.top_risk),
+    );
+
+    card.append(title, slug, summaryText, facts);
+    grid.appendChild(card);
+  });
+
+  compareResult.appendChild(grid);
+}
+
+function buildCompareRow(label, value) {
+  const row = document.createElement('div');
+  const term = document.createElement('dt');
+  term.textContent = label;
+  const detail = document.createElement('dd');
+  detail.textContent = value || 'unknown';
+  row.append(term, detail);
+  return row;
+}
+
+async function loadSavedDossier(slug) {
+  try {
+    const response = await fetch(`/api/dossiers/${slug}`, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    renderDossier(data, { source: 'saved dossier' });
+    setStatus(`Loaded saved dossier ${slug}.`, 'success');
+  } catch (error) {
+    setStatus(`Could not load saved dossier. ${error.message}`, 'warning');
+  }
+}
+
+async function copyText(text, successMessage) {
+  if (!text) {
+    setStatus('Nothing to copy yet.', 'warning');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus(successMessage, 'success');
+  } catch {
+    setStatus('Clipboard access failed in this browser.', 'warning');
+  }
+}
+
+function setStatus(message, kind) {
+  statusLine.textContent = message;
+  statusLine.dataset.kind = kind;
+}
+
+briefForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  requestDossier('/api/dossiers', {
+    pending: 'Sending brief to /api/dossiers...',
+    success: 'Dossier generated from backend response.',
+    failure: 'Backend unavailable, dossier generation failed.',
+    source: 'backend',
+  });
+});
+
+previewButton.addEventListener('click', () => {
+  requestDossier('/api/dossiers/preview', {
+    pending: 'Sending brief to /api/dossiers/preview...',
+    success: 'Preview generated without saving a dossier.',
+    failure: 'Preview endpoint unavailable.',
+    source: 'backend preview',
+  });
+});
+
+projectBrief.addEventListener('input', () => {
+  updateMeta();
+  writeStoredValue('caseforge:lastBrief', projectBrief.value);
+});
+
+document.querySelectorAll('.preset').forEach((button) => {
+  button.addEventListener('click', () => loadPreset(button.dataset.preset));
+});
+
+document.getElementById('demo-button').addEventListener('click', () => {
+  renderDossier(buildLocalDossier(buildPayload()), { source: 'local demo' });
+  setStatus('Demo dossier loaded.', 'success');
+});
+
+document.getElementById('copy-brief-button').addEventListener('click', () => {
+  copyText(projectBrief.value.trim(), 'Brief copied to clipboard.');
+});
+
+document.getElementById('copy-markdown-button').addEventListener('click', () => {
+  copyText(markdownPath.textContent.trim(), 'Markdown path copied.');
+});
+
+refreshRecentButton.addEventListener('click', () => {
+  refreshRecentDossiers();
+  setStatus('Recent dossiers refreshed.', 'success');
+});
+
+compareButton.addEventListener('click', () => {
+  runComparison();
+});
+
+clearCompareButton.addEventListener('click', () => {
+  compareSelection.clear();
+  renderRecentDossiers(recentDossiers);
+  renderCompareSelectionState();
+  renderComparison(null);
+  setStatus('Comparison selection cleared.', 'success');
+});
+
+window.addEventListener('DOMContentLoaded', bootstrap);
