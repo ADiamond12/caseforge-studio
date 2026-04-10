@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "caseforge-studio"
+version = "0.1.0"
+description = "Deterministic interview-ready dossier generator"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Arsenios Diamantakos" }]
+dependencies = []
+
+[project.scripts]
+caseforge = "caseforge.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["caseforge*"]
+
+[tool.setuptools.package-data]
+caseforge = ["web/*.html", "web/*.css", "web/*.js"]
