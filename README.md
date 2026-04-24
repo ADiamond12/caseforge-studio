@@ -1,22 +1,22 @@
 # CaseForge Studio
 
-CaseForge Studio turns a rough product idea into an interview-ready dossier through a deterministic multi-stage pipeline. It ships with a local web app, CLI, local HTTP API, persisted run history, and an optional OpenAI overlay that refines the final dossier without becoming the only path through the product.
+CaseForge Studio turns a rough product idea into an implementation-ready project blueprint through a deterministic multi-stage pipeline. It ships with a local web app, CLI, local HTTP API, persisted run history, and an optional OpenAI overlay that refines the final blueprint without becoming the only path through the product.
 
-The core thesis is simple: a strong portfolio project should be explainable, scoped, and reviewable. CaseForge Studio helps turn vague ideas into artifacts that are easier to demo, compare, and improve.
+The core thesis is simple: a strong project idea should become explainable, scoped, reviewable, and ready for execution. CaseForge Studio helps turn vague ideas into artifacts that are easier to evaluate, compare, and improve.
 
 ## Why It Matters
 
-- Deterministic by default, so the product is demoable without external services.
-- Optional live-provider overlay for a stronger AI story when credentials are available.
+- Deterministic by default, so the product remains usable without external services.
+- Optional live-provider overlay for stronger AI-assisted refinement when credentials are available.
 - Multiple surfaces from one shared service layer: CLI, browser UI, and HTTP API.
 - Saved runs and comparison views make iteration visible instead of hand-wavy.
-- Fast to explain in an interview: brief in, dossier out, compare runs, choose the strongest artifact.
+- Fast to evaluate in a technical review: brief in, blueprint out, compare runs, choose the strongest implementation path.
 
 ## Feature Set
 
-- Planner, architect, evaluator, and storyteller stages
+- Planner, architect, evaluator, and delivery-path stages
 - Markdown, JSON, and summary export under `outputs/` for persisted local runs
-- Local web app with dossier preview, saved-run browsing, and comparison
+- Local web app with blueprint preview, saved-run browsing, and comparison
 - Local HTTP API for generation, preview, retrieval, and compare flows
 - Optional OpenAI Responses API overlay with deterministic fallback
 - Standard-library-only backend runtime
@@ -30,12 +30,12 @@ Brief
   -> planner
   -> architect
   -> evaluator
-  -> storyteller
-  -> dossier export
+  -> delivery path
+  -> blueprint export
   -> optional OpenAI public-facing overlay
 ```
 
-The deterministic path is the primary product path. The live provider is an enhancement layer, not a dependency for the base demo.
+The deterministic path is the primary product path. The live provider is an enhancement layer, not a dependency for the base workflow.
 
 ## Quickstart
 
@@ -45,16 +45,16 @@ From the `caseforge-studio` project root:
 python -m pip install -e .
 ```
 
-Generate a saved dossier:
+Generate a saved blueprint:
 
 ```powershell
-python -m caseforge create "Build an AI interview coach that turns a resume and job description into practice questions, STAR prompts, and a confidence score."
+python -m caseforge create "Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan."
 ```
 
-Preview a dossier without persistence:
+Preview a blueprint without persistence:
 
 ```powershell
-python -m caseforge create "Build an AI interview coach." --preset ml --preview --json
+python -m caseforge create "Build an AI operations copilot." --preset ml --preview --json
 ```
 
 Run the local web app:
@@ -85,7 +85,7 @@ The live provider path is optional. Without credentials, the app falls back to t
 ```powershell
 $env:OPENAI_API_KEY="your-key"
 $env:OPENAI_MODEL="gpt-5-mini"
-python -m caseforge create "Build an AI interview coach." --preset ml --provider openai --preview --json
+python -m caseforge create "Build an AI operations copilot." --preset ml --provider openai --preview --json
 ```
 
 Supported environment variables:
@@ -107,16 +107,16 @@ python -m caseforge create "Design an operations copilot that summarizes inciden
 Create from a file:
 
 ```powershell
-python -m caseforge create --brief-file examples/briefs/ai-interview-coach.md --goal "Show AI judgment"
+python -m caseforge create --brief-file examples/briefs/ai-ops-copilot.md --mode "AI workflow product" --goal "Emphasize shipping discipline" --preset full-stack
 ```
 
-List recent dossiers:
+List recent blueprints:
 
 ```powershell
 python -m caseforge list
 ```
 
-Show a persisted record:
+Open a persisted record:
 
 ```powershell
 python -m caseforge show <slug>
@@ -136,22 +136,22 @@ Example request:
 
 ```json
 {
-  "brief": "Build an AI interview coach that turns a resume and job description into mock questions and rehearsal plans.",
-  "audience": "Hiring manager",
+  "brief": "Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan.",
+  "audience": "Technical stakeholders",
   "mode": "AI assistant",
-  "goal": "Show AI judgment",
+  "goal": "Emphasize AI decisioning",
   "preset": "ml",
   "provider": "openai",
   "provider_model": "gpt-5-mini"
 }
 ```
 
-## Demo Flow
+## Usage Flow
 
 1. Start the web app and paste a rough project idea into the brief box.
-2. Generate a dossier and show the score, architecture section, and interview story.
-3. Open the committed sample dossier at `examples/sample-dossier.md` or a locally generated artifact under `outputs/<slug>/dossier.md`.
-4. Compare two runs to show score movement, provider path, and recommendation changes.
+2. Generate a blueprint and review the score, architecture section, and delivery path.
+3. Open the committed sample blueprint at `examples/sample-blueprint.md` or a locally generated artifact under `outputs/<slug>/dossier.md`.
+4. Compare two runs to review score movement, provider path, and recommendation changes.
 5. Explain why the deterministic path is the default and when the live provider is worth using.
 6. Close with the test suite and release checklist.
 
@@ -161,8 +161,8 @@ Example request:
 - `python -m build`
 - smoke-test `GET /health`
 - smoke-test `GET /`
-- generate one dossier through the CLI
-- generate one dossier through the web UI
+- generate one blueprint through the CLI
+- generate one blueprint through the web UI
 
 ## Project Layout
 
@@ -171,7 +171,7 @@ caseforge-studio/
 |-- .github/
 |-- caseforge/
 |-- examples/
-|   |-- sample-dossier.md
+|   |-- sample-blueprint.md
 |   `-- briefs/
 |-- tests/
 |-- CHANGELOG.md
@@ -179,7 +179,7 @@ caseforge-studio/
 `-- README.md
 ```
 
-`outputs/` is generated locally at runtime and is intentionally kept out of version control. The committed public sample dossier lives at `examples/sample-dossier.md`.
+`outputs/` is generated locally at runtime and is intentionally kept out of version control. The committed public sample blueprint lives at `examples/sample-blueprint.md`.
 
 ## Release And Security
 
@@ -192,12 +192,12 @@ caseforge-studio/
 
 - The server is local-first and single-tenant.
 - There is no built-in authentication or multi-user access control.
-- The OpenAI overlay path should be demonstrated only with deliberate credential handling.
+- The OpenAI overlay path should be used only with deliberate credential handling.
 - The default runtime is still a local stdlib HTTP server, not a multi-tenant hosted deployment stack.
 
 ## Next Steps
 
 - Add a clean deployment wrapper around the local server path
-- Capture one intentional live-provider demo artifact
+- Capture one intentional live-provider blueprint artifact
 - Add stronger browser-level regression coverage
-- Promote the best saved dossier flow into a tighter public release
+- Promote the best saved blueprint flow into a tighter public release

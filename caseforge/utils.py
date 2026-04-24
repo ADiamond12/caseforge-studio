@@ -59,7 +59,7 @@ def slugify(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r"[^a-z0-9]+", "-", text)
     text = re.sub(r"-+", "-", text).strip("-")
-    return text or "caseforge-dossier"
+    return text or "caseforge-blueprint"
 
 
 def titleize(value: str) -> str:
@@ -80,4 +80,4 @@ def choose_best_title(brief: str, explicit_title: str | None) -> str:
     tokens = significant_tokens(brief, limit=3)
     if tokens:
         return titleize(" ".join(tokens))
-    return "Interview Project"
+    return "Project Blueprint"

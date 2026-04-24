@@ -47,7 +47,7 @@ class DossierService:
         return payload
 
     def load_record(self, slug: str) -> dict[str, object]:
-        return self.storage.load_record(slug)
+        return self._normalize_record(self.storage.load_record(slug))
 
     def load_public_payload(self, slug: str) -> dict[str, object]:
         record = self.load_record(slug)
@@ -87,7 +87,7 @@ class DossierService:
     def compare_records(self, slugs: list[str]) -> dict[str, object]:
         ordered_slugs = self._normalize_compare_slugs(slugs)
         if len(ordered_slugs) != 2:
-            raise ValueError("exactly two unique dossier slugs are required")
+            raise ValueError("exactly two unique blueprint slugs are required")
 
         items = [self._comparison_item(self.load_record(slug), slug) for slug in ordered_slugs]
         score_delta = abs(items[0]["score_value"] - items[1]["score_value"])
@@ -106,9 +106,9 @@ class DossierService:
         return ProjectBrief(
             brief=str(payload.get("brief", "")).strip(),
             title=self._optional_text(payload.get("title")),
-            audience=self._fallback_text(payload.get("audience"), "Hiring manager"),
+            audience=self._fallback_text(payload.get("audience"), "Technical stakeholders"),
             mode=self._fallback_text(payload.get("mode"), "AI assistant"),
-            goal=self._fallback_text(payload.get("goal"), "Show systems thinking"),
+            goal=self._fallback_text(payload.get("goal"), "Drive implementation clarity"),
             preset=self._fallback_text(payload.get("preset"), "general"),
             provider=self._fallback_text(payload.get("provider"), "deterministic"),
             provider_model=self._optional_text(payload.get("providerModel") or payload.get("provider_model")),
@@ -126,6 +126,7 @@ class DossierService:
             f"{planner.get('objective', 'No planner objective available.')} "
             f"Recommendation: {evaluator.get('recommendation', 'unknown')}. "
             f"Goal: {brief.get('goal', 'unknown')}. "
+            f"Preset: {brief.get('preset', 'general')}. "
             f"Provider: {brief.get('provider', 'deterministic')}."
         )
 
@@ -173,10 +174,11 @@ class DossierService:
             },
             {
                 "label": "Audience",
-                "title": "Who the demo is aimed at",
+                "title": "Who this blueprint is aimed at",
                 "body": (
-                    f"The dossier is optimized for {record.get('brief', {}).get('audience', 'review').lower()} "
-                    f"review and tuned to show {record.get('brief', {}).get('goal', 'project judgment').lower()}."
+                    f"The blueprint is optimized for {record.get('brief', {}).get('audience', 'review').lower()} "
+                    f"alignment, uses {record.get('brief', {}).get('mode', 'project').lower()} framing, "
+                    f"and is designed to {record.get('brief', {}).get('goal', 'project judgment').lower()}."
                 ),
             },
             {
@@ -195,9 +197,9 @@ class DossierService:
                 "body": DossierService._record_tradeoff(record),
             },
             {
-                "label": "Interview story",
-                "title": "How to present it",
-                "body": record.get("storyteller", {}).get("interviewer_hook", "No interviewer hook available."),
+                "label": "Delivery story",
+                "title": "How to move it toward implementation",
+                "body": record.get("storyteller", {}).get("delivery_hook", "No delivery hook available."),
             },
         ]
 
@@ -215,6 +217,29 @@ class DossierService:
     def _optional_text(value: object) -> str | None:
         text = str(value).strip() if value is not None else ""
         return text or None
+
+    @staticmethod
+    def _normalize_record(record: dict[str, object]) -> dict[str, object]:
+        normalized = dict(record)
+        storyteller = normalized.get("storyteller")
+        if isinstance(storyteller, dict):
+            storyteller_copy = dict(storyteller)
+            if "delivery_hook" not in storyteller_copy and "interviewer_hook" in storyteller_copy:
+                storyteller_copy["delivery_hook"] = storyteller_copy["interviewer_hook"]
+            normalized["storyteller"] = storyteller_copy
+
+        dossier = normalized.get("dossier")
+        if isinstance(dossier, dict):
+            dossier_copy = dict(dossier)
+            nested_storyteller = dossier_copy.get("storyteller")
+            if isinstance(nested_storyteller, dict):
+                nested_storyteller_copy = dict(nested_storyteller)
+                if "delivery_hook" not in nested_storyteller_copy and "interviewer_hook" in nested_storyteller_copy:
+                    nested_storyteller_copy["delivery_hook"] = nested_storyteller_copy["interviewer_hook"]
+                dossier_copy["storyteller"] = nested_storyteller_copy
+            normalized["dossier"] = dossier_copy
+
+        return normalized
 
     @staticmethod
     def _public_record_path(record: dict[str, object], key: str, slug: str) -> str:
@@ -275,7 +300,7 @@ class DossierService:
         if winner_slug is None:
             return (
                 f"{left['title']} and {right['title']} are tied on score. "
-                f"Use preset, provider path, and risk profile to decide which run tells the stronger interview story."
+                f"Use preset, provider path, and risk profile to decide which run has the stronger delivery story."
             )
 
         winner = left if left["slug"] == winner_slug else right
@@ -283,5 +308,5 @@ class DossierService:
         return (
             f"{winner['title']} leads {loser['title']} by {score_delta} points. "
             f"Recommendation: {winner['recommendation']}. "
-            f"Compare the provider path and top risk before choosing the demo artifact."
+            f"Compare the provider path and top risk before choosing the stronger saved blueprint."
         )

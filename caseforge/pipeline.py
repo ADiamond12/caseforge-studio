@@ -22,7 +22,7 @@ DOMAIN_MAP: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("frontend", ("ui", "ux", "web", "visual", "interface", "dashboard", "frontend")),
     ("data", ("data", "analytics", "report", "insight", "metrics", "lake", "warehouse")),
     ("automation", ("automate", "automation", "scheduler", "workflow", "ops", "task")),
-    ("learning", ("study", "education", "course", "learn", "practice", "tutor", "interview")),
+    ("learning", ("study", "education", "course", "learn", "practice", "tutor")),
 )
 
 PRESET_BONUS: dict[str, int] = {
@@ -119,23 +119,23 @@ class DossierPipeline:
         hook = self._hook(planner, evaluator)
         pitch = (
             f"{planner.title} turns a rough brief into a structured build plan, architecture outline, "
-            f"and interview narrative for {planner.audience.lower()} review."
+            f"and implementation blueprint for {planner.audience.lower()} alignment."
         )
         demo_script = (
-            "Paste a brief into the CLI or API.",
-            "Show the generated dossier sections and the scored recommendations.",
-            "Export the markdown bundle and point to the persistence path.",
+            "Start from a brief in the CLI or API.",
+            "Review the generated blueprint sections and scored recommendations.",
+            "Export the markdown bundle and note the persistence path.",
             "Explain how the deterministic pipeline keeps outputs explainable and reproducible.",
         )
         talking_points = (
             "Deterministic AI-style orchestration without external model calls.",
             "Small, testable stages with clean boundaries.",
-            "Markdown-first output that is easy to review in an interview.",
+            "Markdown-first output that is easy to review during planning or implementation.",
             "HTTP API and CLI share the same core service layer.",
         )
         return StorytellerResult(
             elevator_pitch=pitch,
-            interviewer_hook=hook,
+            delivery_hook=hook,
             demo_script=demo_script,
             talking_points=talking_points,
         )
@@ -156,14 +156,14 @@ class DossierPipeline:
         lead_theme = themes[0] if themes else "product"
         token_phrase = ", ".join(tokens[:3]) if tokens else "the brief"
         return (
-            f"Build {title} for {audience.lower()} review, focused on {lead_theme} outcomes and "
+            f"Build {title} for {audience.lower()} alignment, focused on {lead_theme} outcomes and "
             f"anchored in {token_phrase}."
         )
 
     def _assumptions(self, tokens: tuple[str, ...], audience: str) -> tuple[str, ...]:
         assumptions = [
-            f"The target audience is {audience} reviewers or stakeholders.",
-            "The project should be easy to demo without external infrastructure.",
+            f"The intended audience is {audience}.",
+            "The project should be easy to validate without external infrastructure.",
         ]
         if "ai" in tokens or "agent" in tokens:
             assumptions.append("The project should explain its AI layer clearly instead of hiding it.")
@@ -173,12 +173,12 @@ class DossierPipeline:
 
     def _success_metrics(self, tokens: tuple[str, ...], themes: tuple[str, ...]) -> tuple[str, ...]:
         metrics = [
-            "A clear end-to-end story from input brief to exported dossier.",
+            "A clear end-to-end path from input brief to exported blueprint.",
             "A deterministic output that repeats for the same brief.",
-            "A polished interview narrative with concrete talking points.",
+            "A practical implementation narrative with concrete delivery checkpoints.",
         ]
         if "ai" in themes:
-            metrics.append("A visible multi-agent breakdown that is simple to explain in an interview.")
+            metrics.append("A visible multi-stage breakdown that is simple to audit and extend.")
         if "data" in tokens:
             metrics.append("A structured report that makes the project feel measurable and rigorous.")
         return tuple(metrics)
@@ -187,7 +187,7 @@ class DossierPipeline:
         scope = [
             "Brief intake and normalization",
             "Four-stage deterministic pipeline",
-            "Markdown dossier export",
+            "Markdown blueprint export",
             "Local file persistence",
             "JSON API for external integration",
         ]
@@ -200,13 +200,13 @@ class DossierPipeline:
             "Define the brief and expected audience",
             "Run the planner stage",
             "Shape the architecture and execution plan",
-            "Score the project for interview readiness",
-            "Package the dossier and persist the output",
+            "Score the project for implementation readiness",
+            "Package the blueprint and persist the output",
         ]
         if "ai" in themes:
             steps.append("Present the agent breakdown as an explainable AI workflow")
         if success_metrics:
-            steps.append("Use the success metrics as the final demo checklist")
+            steps.append("Use the success metrics as the final validation checklist")
         return tuple(steps)
 
     def _module_plan(self, themes: tuple[str, ...], brief_text: str) -> tuple[str, ...]:
@@ -220,20 +220,27 @@ class DossierPipeline:
 
     def _data_flow(self, themes: tuple[str, ...]) -> tuple[str, ...]:
         flow = (
-            "Brief -> normalized input -> planner -> architect -> evaluator -> storyteller -> dossier export",
-            "Generated dossier -> filesystem persistence -> API response",
+            "Brief -> normalized input -> planner -> architect -> evaluator -> storyteller -> blueprint export",
+            "Generated blueprint -> filesystem persistence -> API response",
         )
         if "ai" in themes:
             flow = flow + ("Agent outputs stay deterministic and inspectable at every stage.",)
         return flow
 
     def _api_surface(self, themes: tuple[str, ...]) -> tuple[str, ...]:
-        api = ("POST /api/dossiers", "POST /api/dossiers/preview", "GET /api/dossiers", "GET /api/dossiers/{slug}", "GET /health")
+        api = (
+            "POST /api/dossiers",
+            "POST /api/dossiers/preview",
+            "GET /api/dossiers",
+            "GET /api/dossiers/compare",
+            "GET /api/dossiers/{slug}",
+            "GET /health",
+        )
         return api
 
     def _persistence_plan(self, themes: tuple[str, ...]) -> tuple[str, ...]:
         plan = (
-            "Create one output folder per generated dossier",
+            "Create one output folder per generated blueprint",
             "Store markdown and JSON side by side",
             "Keep a summary text file for quick CLI inspection",
         )
@@ -244,10 +251,10 @@ class DossierPipeline:
     def _implementation_notes(self, themes: tuple[str, ...], scope: tuple[str, ...]) -> tuple[str, ...]:
         notes = (
             "Use only the Python standard library so the project is easy to run anywhere.",
-            "Keep the pipeline deterministic so interview demos do not depend on external services.",
+            "Keep the pipeline deterministic so validation and planning do not depend on external services.",
         )
         if len(scope) >= 4:
-            notes = notes + ("The scope is intentionally broad enough to demonstrate product judgment.",)
+            notes = notes + ("The scope is intentionally broad enough to reflect product judgment.",)
         if "ai" in themes:
             notes = notes + ("Stage names mirror a multi-agent system to make the architecture legible.",)
         return notes
@@ -255,14 +262,14 @@ class DossierPipeline:
     def _architecture_summary(self, title: str, objective: str, themes: tuple[str, ...]) -> str:
         theme_phrase = ", ".join(themes)
         return (
-            f"{title} uses a deterministic {theme_phrase} pipeline to produce a dossier that explains both what to build and why it is interview-worthy. "
+            f"{title} uses a deterministic {theme_phrase} pipeline to produce a blueprint that explains what to build, why it matters, and how to move it toward implementation. "
             f"{objective}"
         )
 
     def _strengths(self, planner: PlannerResult, architect: ArchitectResult, brief: ProjectBrief) -> tuple[str, ...]:
         strengths = [
-            "Clear product framing for an interviewer.",
-            "Strong separation between planning, architecture, scoring, and storytelling.",
+            "Clear product framing for technical and product stakeholders.",
+            "Strong separation between planning, architecture, scoring, and communication.",
             "Markdown output is immediately shareable.",
         ]
         if "ai" in planner.themes:
@@ -270,7 +277,7 @@ class DossierPipeline:
         if len(architect.modules) >= 6:
             strengths.append("The module breakdown suggests a maintainable implementation plan.")
         if brief.preset == "product":
-            strengths.append("The product preset emphasizes user value and demo clarity.")
+            strengths.append("The product preset emphasizes user value and delivery clarity.")
         if brief.preset == "ml":
             strengths.append("The ML preset pushes the output toward evaluation and model judgment.")
         if brief.preset == "full-stack":
@@ -282,12 +289,12 @@ class DossierPipeline:
     def _risks(self, planner: PlannerResult, brief: ProjectBrief) -> tuple[str, ...]:
         risks = [
             "The brief may be too broad to implement fully in one iteration.",
-            "The project could drift into generic portfolio territory if the demo is not concrete.",
+            "The project could drift into generic planning output if the implementation path is not concrete.",
         ]
         if len(tokenize(brief.brief)) < 6:
             risks.append("The input brief is very short, so the generated output may need extra assumptions.")
         if "ai" not in planner.themes:
-            risks.append("Without an explicit AI angle, the project may sound less differentiated in interviews.")
+            risks.append("Without an explicit automation or AI angle, the project may sound less differentiated.")
         if brief.preset == "ml":
             risks.append("The ML preset raises expectations for evaluation rigor and dataset realism.")
         if brief.preset == "full-stack":
@@ -300,19 +307,19 @@ class DossierPipeline:
         mitigations: list[str] = []
         for risk in risks:
             if "broad" in risk:
-                mitigations.append("Cap the MVP to the dossier generator, export path, and one clean demo flow.")
+                mitigations.append("Cap the MVP to the blueprint generator, export path, and one clean first-run flow.")
             elif "generic" in risk:
-                mitigations.append("Lead with the deterministic multi-agent workflow and the polished narrative output.")
+                mitigations.append("Lead with the deterministic multi-agent workflow and the polished blueprint output.")
             elif "short" in risk:
                 mitigations.append("Use the assumptions section to state the missing context explicitly.")
             else:
-                mitigations.append("Anchor the talk track in the planner, architect, evaluator, and storyteller stages.")
+                mitigations.append("Anchor the walkthrough in the planner, architect, evaluator, and storyteller stages.")
         if "ai" in planner.themes:
-            mitigations.append("Show the stage boundaries to make the AI story feel credible and inspectable.")
+            mitigations.append("Make the stage boundaries explicit so the AI workflow stays credible and inspectable.")
         if brief.preset == "ml":
             mitigations.append("Document evaluation assumptions and keep model claims intentionally conservative.")
         if brief.preset == "full-stack":
-            mitigations.append("Demo the CLI, API, and UI in one pass so the system feels integrated.")
+            mitigations.append("Walk through the CLI, API, and UI in one pass so the system feels integrated.")
         if brief.preset == "founder":
             mitigations.append("Lead with user pain, wedge, and why the first release is strategically narrow.")
         return tuple(dict.fromkeys(mitigations))
@@ -326,7 +333,7 @@ class DossierPipeline:
 
     def _hook(self, planner: PlannerResult, evaluator: EvaluatorResult) -> str:
         if evaluator.overall_score >= 85:
-            return f"This brief already has enough structure for a strong interview demo: {planner.title} can ship as a polished, explainable AI workflow."
+            return f"This brief already has enough structure for an implementation-ready blueprint: {planner.title} can ship as a polished, explainable workflow."
         if "ai" in planner.themes:
             return f"The best hook is the visible agent pipeline: {planner.title} turns a brief into a scoring-backed build plan."
-        return f"The hook is the clean product story: {planner.title} turns ambiguity into a concrete, reviewable build dossier."
+        return f"The hook is the clean product story: {planner.title} turns ambiguity into a concrete, reviewable build blueprint."

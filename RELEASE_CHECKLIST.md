@@ -1,44 +1,44 @@
 # Release Checklist
 
-Use this before calling a CaseForge Studio version ready to demo or share.
+Use this before calling a CaseForge Studio version ready to use or share.
 
 ## Product
 
 - The web app loads without console-breaking behavior.
-- `POST /api/dossiers` works and persists a dossier.
+- `POST /api/dossiers` works and persists a blueprint artifact.
 - `POST /api/dossiers/preview` works without persistence.
 - `GET /api/dossiers` returns recent saved runs.
 - `GET /api/dossiers/compare` compares two saved runs.
-- `GET /api/dossiers/<slug>` returns a loadable dossier payload.
+- `GET /api/dossiers/<slug>` returns a loadable blueprint payload.
 - If `provider=openai` is requested without credentials, the app falls back cleanly.
 - If OpenAI credentials are configured, the live overlay path is explicitly tested.
-- If a public sample dossier is included, `examples/sample-dossier.md` is current and readable.
+- If a public sample blueprint is included, `examples/sample-blueprint.md` is current and readable.
 
 ## Verification
 
 - Run `python -m unittest discover -s tests -v`
 - Smoke-test `GET /health`
 - Smoke-test `GET /`
-- Generate one dossier from the CLI
-- Generate one dossier from the UI
+- Generate one blueprint from the CLI
+- Generate one blueprint from the UI
 
 ## Documentation
 
 - `README.md` reflects the current commands and endpoints.
 - `CHANGELOG.md` reflects completed unreleased work.
-- If a curated sample dossier is included for public demo, it is current and sanitized.
+- If a curated sample blueprint is included for public sharing, it is current and sanitized.
 - Any new behavior is described briefly and concretely.
 
-## Interview Readiness
+## Industry Readiness
 
-- The deterministic fallback story is still true.
-- The live product path is easy to explain in under two minutes.
+- The deterministic fallback and local-first story are still true.
+- The live product path is easy to explain in a quick handoff.
 - The strongest tradeoff is explicit.
 - The sample prompt and sample output both feel intentional.
 
 ## Cleanup
 
-- Remove throwaway outputs that do not support the demo story.
-- Keep one strong sample dossier.
+- Remove throwaway outputs that do not support the current release story.
+- Keep one strong sample blueprint.
 - Do not leave stale claims about endpoints or features in docs or generated artifacts.
 - Confirm `.github/workflows/ci.yml` and `.github/workflows/release.yml` still match the packaging story.

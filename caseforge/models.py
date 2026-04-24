@@ -9,9 +9,9 @@ from pathlib import Path
 class ProjectBrief:
     brief: str
     title: str | None = None
-    audience: str = "interview"
+    audience: str = "Technical stakeholders"
     mode: str = "AI assistant"
-    goal: str = "Show systems thinking"
+    goal: str = "Drive implementation clarity"
     preset: str = "general"
     provider: str = "deterministic"
     provider_model: str | None = None
@@ -51,7 +51,7 @@ class EvaluatorResult:
 @dataclass(frozen=True, slots=True)
 class StorytellerResult:
     elevator_pitch: str
-    interviewer_hook: str
+    delivery_hook: str
     demo_script: tuple[str, ...]
     talking_points: tuple[str, ...]
 
@@ -161,10 +161,10 @@ class DossierResult:
             ),
             DossierSection(
                 label="Audience",
-                title="Who the demo is aimed at",
+                title="Who this blueprint is aimed at",
                 body=(
-                    f"The dossier is optimized for {self.brief.audience.lower()} review and tuned to "
-                    f"show {self.brief.goal.lower()} through a {self.brief.mode.lower()} lens."
+                    f"The blueprint is optimized for {self.brief.audience.lower()} alignment, uses "
+                    f"{self.brief.mode.lower()} framing, and is designed to {self.brief.goal.lower()}."
                 ),
             ),
             DossierSection(
@@ -186,9 +186,9 @@ class DossierResult:
                 ),
             ),
             DossierSection(
-                label="Interview story",
-                title="How to present it",
-                body=self.storyteller.interviewer_hook,
+                label="Delivery story",
+                title="How to move it toward implementation",
+                body=self.storyteller.delivery_hook,
             ),
         )
 

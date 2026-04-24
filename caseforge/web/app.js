@@ -27,12 +27,12 @@ let recentDossiers = [];
 const compareSelection = new Set();
 
 const presetBriefs = {
-  'ai-coach': {
+  'ai-copilot': {
     brief:
-      'Build an AI interview coach that turns a job description, resume, and portfolio into a rehearsal plan with mock questions, STAR story prompts, and a confidence score.',
-    audience: 'Hiring manager',
+      'Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan.',
+    audience: 'Technical stakeholders',
     mode: 'AI assistant',
-    goal: 'Show AI judgment',
+    goal: 'Emphasize AI decisioning',
     preset: 'ml',
     provider: 'deterministic',
   },
@@ -41,7 +41,7 @@ const presetBriefs = {
       'Create an operations copilot that summarizes incidents, drafts a retrospective, proposes follow-up actions, and keeps the team aligned after every escalation.',
     audience: 'Engineering lead',
     mode: 'Workflow product',
-    goal: 'Show systems thinking',
+    goal: 'Drive implementation clarity',
     preset: 'full-stack',
     provider: 'deterministic',
   },
@@ -50,7 +50,7 @@ const presetBriefs = {
       'Design a study companion that turns lecture notes, slides, and saved links into quizzes, revision plans, and memory-friendly summaries for exam prep.',
     audience: 'Internal team',
     mode: 'Study companion',
-    goal: 'Show product taste',
+    goal: 'Strengthen product framing',
     preset: 'product',
     provider: 'deterministic',
   },
@@ -59,7 +59,7 @@ const presetBriefs = {
       'Ship a founder note-taking app that converts messy voice captures into weekly priorities, investor updates, and a clean decision log.',
     audience: 'Startup founder',
     mode: 'Developer tool',
-    goal: 'Show shipping discipline',
+    goal: 'Emphasize shipping discipline',
     preset: 'founder',
     provider: 'deterministic',
   },
@@ -70,12 +70,12 @@ function bootstrap() {
   if (savedBrief) {
     projectBrief.value = savedBrief;
   } else {
-    loadPreset('ai-coach');
+    loadPreset('ai-copilot');
   }
 
   updateMeta();
-  renderDossier(buildLocalDossier(buildPayload()), { source: 'local demo' });
-  setStatus('Local demo dossier loaded. Use Preview or Create dossier to run the backend.', 'pending');
+  renderDossier(buildLocalDossier(buildPayload()), { source: 'local sample' });
+  setStatus('Local sample blueprint loaded. Use Preview or Create blueprint to run the backend.', 'pending');
   renderCompareSelectionState();
   refreshRecentDossiers();
   document.documentElement.classList.add('ready');
@@ -149,7 +149,7 @@ function normalizeDossier(payload, fallbackMeta = {}) {
     : [];
 
   return {
-    title: raw.title || 'Untitled dossier',
+    title: raw.title || 'Untitled blueprint',
     summary: raw.summary || 'No summary returned by the backend.',
     insights: Array.isArray(raw.insights) ? raw.insights : [],
     sections,
@@ -168,14 +168,14 @@ function renderDossier(payload, meta = {}) {
   markdownPath.textContent = dossier.markdownPath || 'No export path yet.';
   markdownChip.textContent = dossier.persisted ? 'Markdown: ready' : 'Markdown: preview only';
   sourceChip.textContent = `Source: ${meta.source || 'backend'}`;
-  transportChip.textContent = meta.source === 'local demo'
-    ? 'Backend: demo seed'
+  transportChip.textContent = meta.source === 'local sample'
+    ? 'Backend: sample seed'
     : `Backend: ${dossier.provider} (${dossier.providerStatus})`;
 
   insightRow.innerHTML = '';
   const insights = dossier.insights.length
     ? dossier.insights
-    : ['Keep the first release narrow.', 'Show the tradeoffs clearly.', 'Make the demo repeatable.'];
+    : ['Keep the first release narrow.', 'Make the tradeoffs explicit.', 'Keep the workflow repeatable.'];
   insights.slice(0, 4).forEach((insight) => {
     const node = document.createElement('span');
     node.className = 'pill';
@@ -262,17 +262,17 @@ function buildLocalDossier(payload) {
       {
         label: 'Architecture',
         title: 'The build plan',
-        body: 'A local web app calls a deterministic dossier pipeline and renders a concise artifact for interview review.',
+        body: 'A local web app calls a deterministic blueprint pipeline and renders a concise artifact for implementation review.',
       },
       {
         label: 'Tradeoffs',
         title: 'What to manage',
-        body: 'Keep the first release narrow and make dossier quality the thesis of the product.',
+        body: 'Keep the first release narrow and make blueprint quality the thesis of the product.',
       },
       {
-        label: 'Interview story',
-        title: 'How to explain it',
-        body: 'Lead with the problem, then the pipeline, then the scope cuts that made the demo credible.',
+        label: 'Delivery story',
+        title: 'How to move it forward',
+        body: 'Lead with the problem, then the pipeline, then the scope cuts that make the implementation path credible.',
       },
     ],
     persisted: false,
@@ -282,12 +282,12 @@ function buildLocalDossier(payload) {
 }
 
 function detectTheme(text) {
-  if (text.includes('interview') || text.includes('resume') || text.includes('hiring')) {
+  if (text.includes('ops') || text.includes('incident') || text.includes('release') || text.includes('service')) {
     return {
-      title: 'Signal Studio',
-      user: 'candidate',
-      problem: 'Candidates struggle to present scattered experience as a coherent, repeatable story.',
-      approach: 'A guided rehearsal workflow converts raw material into a stronger project narrative and better mock sessions.',
+      title: 'OpsFrame',
+      user: 'operator',
+      problem: 'Operational work is fast, fragmented, and difficult to convert into clear follow-up ownership.',
+      approach: 'A guided workflow converts raw operational context into a practical action plan, risk summary, and delivery cadence.',
     };
   }
   if (text.includes('study') || text.includes('lecture') || text.includes('exam')) {
@@ -298,15 +298,6 @@ function detectTheme(text) {
       approach: 'An AI study companion turns passive content into quizzes, summaries, and a revision cadence that is easy to follow.',
     };
   }
-  if (text.includes('incident') || text.includes('ops') || text.includes('retrospective')) {
-    return {
-      title: 'Ops Frame',
-      user: 'operator',
-      problem: 'Operational work is fast, messy, and difficult to summarize after the moment has passed.',
-      approach: 'A workflow copilot captures context, suggests actions, and keeps the follow-up work visible.',
-    };
-  }
-
   return {
     title: 'ForgeLine',
     user: 'builder',
@@ -345,7 +336,7 @@ function renderRecentDossiers(items) {
   if (!items.length) {
     const empty = document.createElement('p');
     empty.className = 'recent-empty';
-    empty.textContent = 'No saved dossiers yet.';
+    empty.textContent = 'No saved blueprints yet.';
     recentList.appendChild(empty);
     return;
   }
@@ -393,7 +384,7 @@ function renderRecentDossiers(items) {
     const openButton = document.createElement('button');
     openButton.type = 'button';
     openButton.className = 'recent-action';
-    openButton.textContent = 'Open dossier';
+    openButton.textContent = 'Open blueprint';
     openButton.addEventListener('click', () => loadSavedDossier(item.slug));
 
     const compareToggle = document.createElement('button');
@@ -457,7 +448,7 @@ function toggleCompareSelection(slug) {
   } else if (compareSelection.size < 2) {
     compareSelection.add(slug);
   } else {
-    setStatus('Select at most two saved dossiers for comparison.', 'warning');
+    setStatus('Select at most two saved blueprints for comparison.', 'warning');
     return;
   }
 
@@ -483,11 +474,11 @@ function renderCompareSelectionState() {
 async function runComparison() {
   const selected = [...compareSelection];
   if (selected.length !== 2) {
-    setStatus('Pick exactly two saved dossiers before comparing them.', 'warning');
+    setStatus('Pick exactly two saved blueprints before comparing them.', 'warning');
     return;
   }
 
-  setStatus('Loading dossier comparison...', 'pending');
+  setStatus('Loading blueprint comparison...', 'pending');
   try {
     const params = new URLSearchParams();
     selected.forEach((slug) => params.append('slug', slug));
@@ -503,10 +494,10 @@ async function runComparison() {
 
     const data = await response.json();
     renderComparison(data);
-    setStatus('Comparison loaded from saved dossiers.', 'success');
+    setStatus('Comparison loaded from saved blueprints.', 'success');
   } catch (error) {
     renderComparison(null);
-    setStatus(`Could not compare saved dossiers. ${error.message}`, 'warning');
+    setStatus(`Could not compare saved blueprints. ${error.message}`, 'warning');
   }
 }
 
@@ -582,10 +573,10 @@ async function loadSavedDossier(slug) {
       throw new Error(`Request failed with status ${response.status}`);
     }
     const data = await response.json();
-    renderDossier(data, { source: 'saved dossier' });
-    setStatus(`Loaded saved dossier ${slug}.`, 'success');
+    renderDossier(data, { source: 'saved blueprint' });
+    setStatus(`Loaded saved blueprint ${slug}.`, 'success');
   } catch (error) {
-    setStatus(`Could not load saved dossier. ${error.message}`, 'warning');
+    setStatus(`Could not load saved blueprint. ${error.message}`, 'warning');
   }
 }
 
@@ -612,8 +603,8 @@ briefForm.addEventListener('submit', (event) => {
   event.preventDefault();
   requestDossier('/api/dossiers', {
     pending: 'Sending brief to /api/dossiers...',
-    success: 'Dossier generated from backend response.',
-    failure: 'Backend unavailable, dossier generation failed.',
+    success: 'Blueprint generated from backend response.',
+    failure: 'Backend unavailable, blueprint generation failed.',
     source: 'backend',
   });
 });
@@ -621,7 +612,7 @@ briefForm.addEventListener('submit', (event) => {
 previewButton.addEventListener('click', () => {
   requestDossier('/api/dossiers/preview', {
     pending: 'Sending brief to /api/dossiers/preview...',
-    success: 'Preview generated without saving a dossier.',
+    success: 'Preview generated without saving a blueprint.',
     failure: 'Preview endpoint unavailable.',
     source: 'backend preview',
   });
@@ -636,9 +627,9 @@ document.querySelectorAll('.preset').forEach((button) => {
   button.addEventListener('click', () => loadPreset(button.dataset.preset));
 });
 
-document.getElementById('demo-button').addEventListener('click', () => {
-  renderDossier(buildLocalDossier(buildPayload()), { source: 'local demo' });
-  setStatus('Demo dossier loaded.', 'success');
+document.getElementById('sample-button').addEventListener('click', () => {
+  renderDossier(buildLocalDossier(buildPayload()), { source: 'local sample' });
+  setStatus('Sample blueprint loaded.', 'success');
 });
 
 document.getElementById('copy-brief-button').addEventListener('click', () => {
@@ -651,7 +642,7 @@ document.getElementById('copy-markdown-button').addEventListener('click', () => 
 
 refreshRecentButton.addEventListener('click', () => {
   refreshRecentDossiers();
-  setStatus('Recent dossiers refreshed.', 'success');
+  setStatus('Recent blueprints refreshed.', 'success');
 });
 
 compareButton.addEventListener('click', () => {

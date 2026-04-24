@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -39,10 +40,10 @@ class CaseForgeTests(unittest.TestCase):
     def test_pipeline_produces_ai_themes_and_markdown(self) -> None:
         result = DossierPipeline().run(
             ProjectBrief(
-                brief="Build an AI interview coach that scores responses and drafts rehearsal plans.",
-                audience="Hiring manager",
+                brief="Build an AI operations copilot that scores incidents and drafts follow-up plans.",
+                audience="Technical stakeholders",
                 mode="AI assistant",
-                goal="Show AI judgment",
+                goal="Emphasize AI decisioning",
             )
         )
         self.assertIn("ai", result.planner.themes)
@@ -55,7 +56,7 @@ class CaseForgeTests(unittest.TestCase):
                 brief="Design an operations copilot that summarizes incidents and suggests follow-up work.",
                 audience="Engineering lead",
                 mode="Workflow product",
-                goal="Show systems thinking",
+                goal="Drive implementation clarity",
                 preset="full-stack",
             )
         )
@@ -77,7 +78,7 @@ class CaseForgeTests(unittest.TestCase):
                 brief="Create a study planner that turns notes into revision plans and quizzes.",
                 audience="Internal team",
                 mode="Study companion",
-                goal="Show product taste",
+                goal="Strengthen product framing",
             )
         )
         record = self.service.load_record(result.slug)
@@ -88,10 +89,10 @@ class CaseForgeTests(unittest.TestCase):
     def test_service_lists_recent_records_with_comparison_metadata(self) -> None:
         result = self.service.generate(
             ProjectBrief(
-                brief="Build an AI interview coach that compares multiple dossier runs for a hiring loop.",
-                audience="Hiring manager",
+                brief="Build an AI operations copilot that compares multiple blueprint runs for a release review.",
+                audience="Technical stakeholders",
                 mode="AI assistant",
-                goal="Show AI judgment",
+                goal="Emphasize AI decisioning",
                 preset="ml",
             )
         )
@@ -103,14 +104,43 @@ class CaseForgeTests(unittest.TestCase):
         self.assertIn("/100", items[0]["score"])
         self.assertTrue(items[0]["summary"])
         self.assertIn("Recommendation:", items[0]["summary"])
+        self.assertIn("Preset:", items[0]["summary"])
+
+    def test_service_lists_records_by_created_at_not_slug_order(self) -> None:
+        pipeline = DossierPipeline()
+        older = self.service.storage.persist(
+            pipeline.run(
+                ProjectBrief(
+                    brief="Build Zeta ops planner.",
+                    audience="Technical stakeholders",
+                    mode="Workflow product",
+                    goal="Drive implementation clarity",
+                ),
+                created_at=datetime(2026, 4, 24, 9, 0, tzinfo=timezone.utc),
+            )
+        )
+        newer = self.service.storage.persist(
+            pipeline.run(
+                ProjectBrief(
+                    brief="Build Alpha ops planner.",
+                    audience="Technical stakeholders",
+                    mode="Workflow product",
+                    goal="Drive implementation clarity",
+                ),
+                created_at=datetime(2026, 4, 25, 9, 0, tzinfo=timezone.utc),
+            )
+        )
+
+        items = self.service.list_records(limit=5)
+        self.assertEqual([items[0]["slug"], items[1]["slug"]], [newer.slug, older.slug])
 
     def test_service_compares_two_records(self) -> None:
         first = self.service.generate(
             ProjectBrief(
-                brief="Build an AI interview coach that scores responses and rehearsal plans.",
-                audience="Hiring manager",
+                brief="Build an AI operations copilot that scores incidents and follow-up plans.",
+                audience="Technical stakeholders",
                 mode="AI assistant",
-                goal="Show AI judgment",
+                goal="Emphasize AI decisioning",
                 preset="ml",
             )
         )
@@ -119,7 +149,7 @@ class CaseForgeTests(unittest.TestCase):
                 brief="Design an operations copilot that summarizes incidents and next steps.",
                 audience="Engineering lead",
                 mode="Workflow product",
-                goal="Show systems thinking",
+                goal="Drive implementation clarity",
                 preset="full-stack",
             )
         )
@@ -140,9 +170,9 @@ class CaseForgeTests(unittest.TestCase):
         result = self.service.preview(
             ProjectBrief(
                 brief="Preview an AI product brief before saving it.",
-                audience="Hiring manager",
+                audience="Technical stakeholders",
                 mode="AI assistant",
-                goal="Show AI judgment",
+                goal="Emphasize AI decisioning",
                 preset="ml",
             )
         )
@@ -157,10 +187,10 @@ class CaseForgeTests(unittest.TestCase):
     def test_service_loads_public_payload_for_saved_record(self) -> None:
         result = self.service.generate(
             ProjectBrief(
-                brief="Build a full-stack dossier product with CLI, API, and UI.",
+                brief="Build a full-stack blueprint product with CLI, API, and UI.",
                 audience="Engineering lead",
                 mode="Developer tool",
-                goal="Show systems thinking",
+                goal="Drive implementation clarity",
                 preset="full-stack",
             )
         )
@@ -169,14 +199,15 @@ class CaseForgeTests(unittest.TestCase):
         self.assertEqual(payload["preset"], "full-stack")
         self.assertTrue(payload["persisted"])
         self.assertEqual(len(payload["sections"]), 6)
+        self.assertEqual(payload["summary"], self.service.to_public_payload(result)["summary"])
 
     def test_openai_provider_falls_back_without_api_key(self) -> None:
         result = self.service.preview(
             ProjectBrief(
-                brief="Use OpenAI to refine a dossier.",
-                audience="Hiring manager",
+                brief="Use OpenAI to refine a blueprint.",
+                audience="Technical stakeholders",
                 mode="AI assistant",
-                goal="Show AI judgment",
+                goal="Emphasize AI decisioning",
                 preset="ml",
                 provider="openai",
             )
@@ -194,19 +225,19 @@ class CaseForgeTests(unittest.TestCase):
                             "type": "output_text",
                             "text": json.dumps(
                                 {
-                                    "summary": "A live OpenAI overlay tightened the public-facing story for this dossier.",
+                                    "summary": "A live OpenAI overlay tightened the public-facing story for this blueprint.",
                                     "insights": [
                                         "Lead with the wedge before the feature list.",
-                                        "Keep the evaluation story explicit.",
-                                        "Anchor the demo around one saved artifact.",
+                                        "Keep the evaluation logic explicit.",
+                                        "Anchor the review around one saved artifact.",
                                     ],
                                     "sections": [
-                                        {"label": "Problem", "title": "Problem framing", "body": "The user needs a clearer path from idea to interview artifact."},
-                                        {"label": "Audience", "title": "Review target", "body": "The output is aimed at a hiring manager or technical interviewer."},
-                                        {"label": "Approach", "title": "How it works", "body": "A deterministic dossier is generated first, then refined for public presentation."},
+                                        {"label": "Problem", "title": "Problem framing", "body": "The user needs a clearer path from idea to implementation artifact."},
+                                        {"label": "Audience", "title": "Review target", "body": "The output is aimed at technical stakeholders."},
+                                        {"label": "Approach", "title": "How it works", "body": "A deterministic blueprint is generated first, then refined for public presentation."},
                                         {"label": "Architecture", "title": "System shape", "body": "The provider overlay sits beside the deterministic pipeline and degrades safely."},
-                                        {"label": "Tradeoffs", "title": "What changes", "body": "Live provider output is optional and never blocks the demo path."},
-                                        {"label": "Interview story", "title": "How to present it", "body": "Show deterministic output first, then explain the optional live refinement layer."},
+                                        {"label": "Tradeoffs", "title": "What changes", "body": "Live provider output is optional and never blocks the deterministic path."},
+                                        {"label": "Delivery story", "title": "How to move it forward", "body": "Review deterministic output first, then explain the optional live refinement layer."},
                                     ],
                                 }
                             ),
@@ -220,10 +251,10 @@ class CaseForgeTests(unittest.TestCase):
             with patch("caseforge.providers.urlopen", return_value=FakeHTTPResponse(fake_payload)):
                 result = self.service.preview(
                     ProjectBrief(
-                        brief="Use OpenAI to refine a dossier.",
-                        audience="Hiring manager",
+                        brief="Use OpenAI to refine a blueprint.",
+                        audience="Technical stakeholders",
                         mode="AI assistant",
-                        goal="Show AI judgment",
+                        goal="Emphasize AI decisioning",
                         preset="ml",
                         provider="openai",
                     )
@@ -242,13 +273,13 @@ class CaseForgeTests(unittest.TestCase):
                 "-m",
                 "caseforge",
                 "create",
-                "Build an AI coach for interviews and portfolio prep.",
+                "Build an AI operations copilot for release planning.",
                 "--audience",
-                "Hiring manager",
+                "Technical stakeholders",
                 "--mode",
                 "AI assistant",
                 "--goal",
-                "Show AI judgment",
+                "Emphasize AI decisioning",
                 "--preset",
                 "ml",
                 "--json",
@@ -271,7 +302,7 @@ class CaseForgeTests(unittest.TestCase):
                 "-m",
                 "caseforge",
                 "create",
-                "Preview an ML-oriented dossier without saving it.",
+                "Preview an ML-oriented blueprint without saving it.",
                 "--preset",
                 "ml",
                 "--preview",
@@ -286,6 +317,53 @@ class CaseForgeTests(unittest.TestCase):
         self.assertTrue(payload["preview"])
         self.assertFalse(payload["persisted"])
 
+    def test_service_load_public_payload_normalizes_legacy_interviewer_hook(self) -> None:
+        legacy_slug = "legacy-blueprint"
+        legacy_dir = self.output_root / legacy_slug
+        legacy_dir.mkdir(parents=True, exist_ok=True)
+        (legacy_dir / "dossier.json").write_text(
+            json.dumps(
+                {
+                    "slug": legacy_slug,
+                    "brief": {
+                        "audience": "Technical stakeholders",
+                        "goal": "Drive implementation clarity",
+                        "mode": "AI assistant",
+                        "preset": "general",
+                        "provider": "deterministic",
+                    },
+                    "planner": {
+                        "title": "Legacy Blueprint",
+                        "objective": "Legacy objective",
+                    },
+                    "architect": {
+                        "architecture_summary": "Legacy architecture summary",
+                    },
+                    "evaluator": {
+                        "overall_score": 81,
+                        "recommendation": "ship",
+                        "risks": ["Legacy risk"],
+                        "mitigations": ["Legacy mitigation"],
+                    },
+                    "storyteller": {
+                        "elevator_pitch": "Legacy pitch",
+                        "interviewer_hook": "Legacy delivery hook",
+                    },
+                    "markdown_path": f"outputs/{legacy_slug}/dossier.md",
+                    "json_path": f"outputs/{legacy_slug}/dossier.json",
+                    "summary_path": f"outputs/{legacy_slug}/summary.txt",
+                    "provider_status": "deterministic",
+                    "provider_message": "Deterministic pipeline used.",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        record = self.service.load_record(legacy_slug)
+        payload = self.service.load_public_payload(legacy_slug)
+        self.assertEqual(record["storyteller"]["delivery_hook"], "Legacy delivery hook")
+        self.assertEqual(payload["sections"][-1]["body"], "Legacy delivery hook")
+
     def test_cli_list_reports_empty_output_directory(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "caseforge", "list"],
@@ -294,7 +372,7 @@ class CaseForgeTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertTrue(result.stdout.strip() in {"No dossiers found.", ""} or "\t" in result.stdout)
+        self.assertTrue(result.stdout.strip() in {"No blueprints found.", ""} or "\t" in result.stdout)
 
 
 if __name__ == "__main__":

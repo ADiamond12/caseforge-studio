@@ -6,7 +6,7 @@
   <title>CaseForge Studio</title>
   <meta
     name="description"
-    content="CaseForge Studio turns a rough project idea into a polished interview-ready dossier."
+    content="CaseForge Studio turns a rough project idea into an implementation-ready blueprint."
   />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -18,7 +18,7 @@
   <header class="hero shell">
     <div class="hero-copy">
       <p class="eyebrow">CaseForge Studio</p>
-      <h1>Turn a rough idea into an interview-ready project dossier.</h1>
+      <h1>Turn a rough idea into an industry-ready project blueprint.</h1>
       <p class="lede">
         Draft a concept, generate a structured plan, and present it like a product team had already
         debated the tradeoffs for you.
@@ -36,7 +36,7 @@
       <ul class="promise-list">
         <li>Executive summary with a crisp product angle</li>
         <li>Problem, audience, and differentiation breakdown</li>
-        <li>Architecture, risks, and interview talking points</li>
+        <li>Architecture, risks, and delivery checkpoints</li>
       </ul>
     </aside>
   </header>
@@ -58,7 +58,7 @@
             id="project-brief"
             name="projectBrief"
             rows="8"
-            placeholder="Example: Build an AI interview coach that turns a job description, resume, and a portfolio into a rehearsal plan with mock questions, STAR story prompts, and a confidence score."
+            placeholder="Example: Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan."
             required
           ></textarea>
         </label>
@@ -67,7 +67,7 @@
           <label class="field" for="audience">
             <span>Audience</span>
             <select id="audience" name="audience">
-              <option value="Hiring manager">Hiring manager</option>
+              <option value="Technical stakeholders">Technical stakeholders</option>
               <option value="Engineering lead">Engineering lead</option>
               <option value="Startup founder">Startup founder</option>
               <option value="Internal team">Internal team</option>
@@ -85,17 +85,17 @@
           </label>
 
           <label class="field" for="goal">
-            <span>Interview goal</span>
+            <span>Delivery goal</span>
             <select id="goal" name="goal">
-              <option value="Show systems thinking">Show systems thinking</option>
-              <option value="Show product taste">Show product taste</option>
-              <option value="Show AI judgment">Show AI judgment</option>
-              <option value="Show shipping discipline">Show shipping discipline</option>
+              <option value="Drive implementation clarity">Drive implementation clarity</option>
+              <option value="Strengthen product framing">Strengthen product framing</option>
+              <option value="Emphasize AI decisioning">Emphasize AI decisioning</option>
+              <option value="Emphasize shipping discipline">Emphasize shipping discipline</option>
             </select>
           </label>
 
           <label class="field" for="preset">
-            <span>Review preset</span>
+            <span>Execution preset</span>
             <select id="preset" name="preset">
               <option value="general">General</option>
               <option value="product">Product</option>
@@ -115,44 +115,44 @@
         </div>
 
         <div class="preset-row" aria-label="Preset prompts">
-          <button class="preset" type="button" data-preset="ai-coach">AI interview coach</button>
+          <button class="preset" type="button" data-preset="ai-copilot">AI ops copilot</button>
           <button class="preset" type="button" data-preset="ops-brief">Ops copilot</button>
           <button class="preset" type="button" data-preset="study-lens">Study lens</button>
           <button class="preset" type="button" data-preset="founder-note">Founder note</button>
         </div>
 
         <div class="actions">
-          <button type="submit" class="primary">Forge dossier</button>
+          <button type="submit" class="primary">Forge blueprint</button>
           <button type="button" id="preview-button" class="secondary">Preview only</button>
-          <button type="button" id="demo-button" class="secondary">Load demo</button>
+          <button type="button" id="sample-button" class="secondary">Load sample</button>
           <button type="button" id="copy-brief-button" class="ghost">Copy brief</button>
         </div>
 
         <p class="helper" id="brief-meta">0 words - ready for a first pass.</p>
         <p class="status-line" id="status" role="status" aria-live="polite">
-          Enter a project idea, then generate a dossier.
+          Enter a project idea, then generate a blueprint.
         </p>
       </form>
 
       <section class="recent-panel">
         <div class="mini-panel-header">
           <div>
-            <p class="card-label">Recent dossiers</p>
+            <p class="card-label">Recent blueprints</p>
             <h3>Saved runs from this workspace</h3>
           </div>
           <button type="button" id="refresh-recent-button" class="ghost compact">Refresh</button>
         </div>
         <p class="recent-helper">
-          Compare runs by score, preset, provider path, and recommendation before opening a full dossier.
+          Compare runs by score, preset, provider path, and recommendation before opening a full blueprint.
         </p>
         <div class="recent-list" id="recent-list">
-          <p class="recent-empty">No saved dossiers yet.</p>
+          <p class="recent-empty">No saved blueprints yet.</p>
         </div>
         <section class="compare-panel">
           <div class="mini-panel-header">
             <div>
               <p class="card-label">Run comparison</p>
-              <h3>Review two saved dossiers side by side</h3>
+              <h3>Review two saved blueprints side by side</h3>
             </div>
           </div>
           <p class="recent-helper" id="compare-selection">Select up to two saved runs to compare.</p>
@@ -170,20 +170,20 @@
     <section class="panel dossier glass" aria-live="polite">
       <div class="panel-header dossier-header">
         <div>
-          <p class="card-label">Generated dossier</p>
+          <p class="card-label">Generated blueprint</p>
           <h2 id="dossier-title">Waiting for a brief</h2>
         </div>
         <div class="status-stack">
           <span class="status-chip" id="markdown-chip">Markdown: unavailable</span>
-          <span class="status-chip subtle" id="source-chip">Source: local demo</span>
+          <span class="status-chip subtle" id="source-chip">Source: local sample</span>
         </div>
       </div>
 
       <div class="summary-card">
         <p class="card-label">Executive summary</p>
         <p id="dossier-summary">
-          The output will appear here, broken into readable sections with enough clarity for an
-          interviewer to scan in under a minute.
+          The output will appear here, broken into readable sections with enough clarity for a
+          technical reviewer to scan in under a minute.
         </p>
       </div>
 

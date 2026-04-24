@@ -12,41 +12,41 @@ from .service import DossierService
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="caseforge",
-        description="Generate interview-ready project dossiers from rough ideas.",
+        description="Generate implementation-ready project blueprints from rough ideas.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    create_parser = subparsers.add_parser("create", help="generate a dossier from a brief")
+    create_parser = subparsers.add_parser("create", help="generate a project blueprint from a brief")
     create_parser.add_argument("brief", nargs="?", help="raw project brief text")
     create_parser.add_argument("--brief-file", help="path to a markdown or text brief")
     create_parser.add_argument("--title")
-    create_parser.add_argument("--audience", default="Hiring manager")
+    create_parser.add_argument("--audience", default="Technical stakeholders")
     create_parser.add_argument("--mode", default="AI assistant")
-    create_parser.add_argument("--goal", default="Show systems thinking")
+    create_parser.add_argument("--goal", default="Drive implementation clarity")
     create_parser.add_argument(
         "--preset",
         default="general",
         choices=["general", "product", "ml", "full-stack", "founder"],
-        help="evaluation preset for the dossier",
+        help="evaluation preset for the generated blueprint",
     )
     create_parser.add_argument(
         "--provider",
         default="deterministic",
         choices=["deterministic", "openai"],
-        help="generation provider; deterministic is the default safe demo path",
+        help="generation provider; deterministic is the default safe local path",
     )
     create_parser.add_argument("--provider-model", help="optional live provider model override")
-    create_parser.add_argument("--preview", action="store_true", help="generate a dossier without saving it")
+    create_parser.add_argument("--preview", action="store_true", help="generate a blueprint without saving it")
     create_parser.add_argument("--json", action="store_true", help="print the public JSON payload")
 
     serve_parser = subparsers.add_parser("serve", help="run the local web app")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8127)
 
-    show_parser = subparsers.add_parser("show", help="show a persisted dossier record by slug")
+    show_parser = subparsers.add_parser("show", help="open a persisted blueprint record by slug")
     show_parser.add_argument("slug")
 
-    list_parser = subparsers.add_parser("list", help="list recent dossiers")
+    list_parser = subparsers.add_parser("list", help="list recent blueprints")
     list_parser.add_argument("--limit", type=int, default=10)
 
     return parser
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "list":
         records = service.list_records(limit=args.limit)
         if not records:
-            print("No dossiers found.")
+            print("No blueprints found.")
             return 0
         for record in records:
             print(f"{record['slug']}\t{record['title']}\t{record['score']}")

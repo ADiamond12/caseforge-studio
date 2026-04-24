@@ -91,15 +91,15 @@ class OpenAIResponsesProvider(DossierProvider):
     def _build_payload(self, brief: ProjectBrief, result: DossierResult, model: str) -> dict[str, object]:
         prompt = "\n\n".join(
             [
-                "You are refining the public-facing output of a portfolio project dossier.",
+                "You are refining the public-facing output of an implementation-ready project blueprint.",
                 "Return only JSON that follows the schema.",
-                "Keep the output concise, concrete, and interview-ready.",
+                "Keep the output concise, concrete, and industry-ready.",
                 f"Brief:\n{brief.brief.strip()}",
                 f"Audience: {brief.audience}",
                 f"Mode: {brief.mode}",
                 f"Goal: {brief.goal}",
                 f"Preset: {brief.preset}",
-                "Deterministic dossier context:",
+                "Deterministic blueprint context:",
                 result.markdown,
             ]
         )

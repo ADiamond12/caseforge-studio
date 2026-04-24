@@ -54,7 +54,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
                 try:
                     record = service.load_public_payload(slug)
                 except FileNotFoundError:
-                    self._json_response({"error": f"dossier not found: {slug}"}, status=HTTPStatus.NOT_FOUND)
+                    self._json_response({"error": f"blueprint not found: {slug}"}, status=HTTPStatus.NOT_FOUND)
                     return
                 self._json_response(record)
                 return

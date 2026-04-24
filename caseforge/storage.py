@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 
 from .models import DossierResult
@@ -44,7 +45,7 @@ class DossierStorage:
             return []
 
         records: list[dict[str, str]] = []
-        for directory in sorted(self.root.iterdir(), reverse=True):
+        for directory in self.root.iterdir():
             json_path = directory / "dossier.json"
             if not directory.is_dir() or not json_path.exists():
                 continue
@@ -67,9 +68,11 @@ class DossierStorage:
                     "summary": self._summary_snippet(payload),
                 }
             )
-            if len(records) >= limit:
-                break
-        return records
+        records.sort(
+            key=lambda record: self._parse_created_at(record.get("created_at", "")),
+            reverse=True,
+        )
+        return records[:limit]
 
     @staticmethod
     def _build_slug(result: DossierResult) -> str:
@@ -97,7 +100,24 @@ class DossierStorage:
     def _summary_snippet(payload: dict[str, object]) -> str:
         planner = payload.get("planner", {})
         evaluator = payload.get("evaluator", {})
+        brief = payload.get("brief", {})
         objective = str(planner.get("objective", "")).strip()
         recommendation = str(evaluator.get("recommendation", "")).strip()
-        summary = f"{objective} Recommendation: {recommendation}.".strip()
+        goal = str(brief.get("goal", "")).strip()
+        preset = str(brief.get("preset", "")).strip()
+        provider = str(brief.get("provider", "")).strip()
+        summary = (
+            f"{objective} Recommendation: {recommendation}. "
+            f"Goal: {goal}. Preset: {preset}. Provider: {provider}."
+        ).strip()
         return summary[:220]
+
+    @staticmethod
+    def _parse_created_at(value: str) -> datetime:
+        text = str(value).strip()
+        if not text:
+            return datetime.min
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.min
