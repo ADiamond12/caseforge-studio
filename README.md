@@ -48,13 +48,13 @@ python -m pip install -e .
 Generate a saved blueprint:
 
 ```powershell
-python -m caseforge create "Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan."
+python -m caseforge create "Build a release readiness planner that turns incident notes, service metrics, and owner comments into an action plan with risks, owners, checks, and next steps."
 ```
 
 Preview a blueprint without persistence:
 
 ```powershell
-python -m caseforge create "Build an AI operations copilot." --preset ml --preview --json
+python -m caseforge create "Build a release readiness planner for engineering leads." --preset full-stack --preview --json
 ```
 
 Run the local web app:

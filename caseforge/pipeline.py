@@ -119,7 +119,7 @@ class DossierPipeline:
         hook = self._hook(planner, evaluator)
         pitch = (
             f"{planner.title} turns a rough brief into a structured build plan, architecture outline, "
-            f"and implementation blueprint for {planner.audience.lower()} alignment."
+            f"and implementation blueprint for {planner.audience.lower()}."
         )
         demo_script = (
             "Start from a brief in the CLI or API.",
@@ -127,8 +127,13 @@ class DossierPipeline:
             "Export the markdown bundle and note the persistence path.",
             "Explain how the deterministic pipeline keeps outputs explainable and reproducible.",
         )
+        first_talking_point = (
+            "Deterministic staged planning without external model calls."
+            if "ai" not in planner.themes
+            else "Deterministic AI-style orchestration without external model calls."
+        )
         talking_points = (
-            "Deterministic AI-style orchestration without external model calls.",
+            first_talking_point,
             "Small, testable stages with clean boundaries.",
             "Markdown-first output that is easy to review during planning or implementation.",
             "HTTP API and CLI share the same core service layer.",
@@ -154,10 +159,10 @@ class DossierPipeline:
 
     def _objective(self, title: str, tokens: tuple[str, ...], themes: tuple[str, ...], audience: str) -> str:
         lead_theme = themes[0] if themes else "product"
-        token_phrase = ", ".join(tokens[:3]) if tokens else "the brief"
+        token_phrase = ", ".join(tokens[:3]) if tokens else "the submitted brief"
         return (
-            f"Build {title} for {audience.lower()} alignment, focused on {lead_theme} outcomes and "
-            f"anchored in {token_phrase}."
+            f"Turn {title} into a plan {audience.lower()} can review quickly, with emphasis on "
+            f"{lead_theme} decisions and the concrete inputs: {token_phrase}."
         )
 
     def _assumptions(self, tokens: tuple[str, ...], audience: str) -> tuple[str, ...]:
@@ -262,18 +267,18 @@ class DossierPipeline:
     def _architecture_summary(self, title: str, objective: str, themes: tuple[str, ...]) -> str:
         theme_phrase = ", ".join(themes)
         return (
-            f"{title} uses a deterministic {theme_phrase} pipeline to produce a blueprint that explains what to build, why it matters, and how to move it toward implementation. "
-            f"{objective}"
+            f"{title} routes one brief through planning, architecture, evaluation, and delivery notes. "
+            f"The deterministic {theme_phrase} pipeline makes the recommendation repeatable and easy to challenge in review."
         )
 
     def _strengths(self, planner: PlannerResult, architect: ArchitectResult, brief: ProjectBrief) -> tuple[str, ...]:
         strengths = [
-            "Clear product framing for technical and product stakeholders.",
-            "Strong separation between planning, architecture, scoring, and communication.",
-            "Markdown output is immediately shareable.",
+            "The output separates product framing, architecture, scoring, and delivery notes.",
+            "The markdown export gives reviewers one artifact to inspect or hand off.",
+            "The deterministic path makes repeated runs comparable.",
         ]
         if "ai" in planner.themes:
-            strengths.append("The agent labels make the workflow feel AI-native without hiding the logic.")
+            strengths.append("The AI-facing labels are backed by visible deterministic stages.")
         if len(architect.modules) >= 6:
             strengths.append("The module breakdown suggests a maintainable implementation plan.")
         if brief.preset == "product":
@@ -309,7 +314,7 @@ class DossierPipeline:
             if "broad" in risk:
                 mitigations.append("Cap the MVP to the blueprint generator, export path, and one clean first-run flow.")
             elif "generic" in risk:
-                mitigations.append("Lead with the deterministic multi-agent workflow and the polished blueprint output.")
+                mitigations.append("Use a specific brief and review the stage output instead of relying on broad product claims.")
             elif "short" in risk:
                 mitigations.append("Use the assumptions section to state the missing context explicitly.")
             else:
@@ -333,7 +338,7 @@ class DossierPipeline:
 
     def _hook(self, planner: PlannerResult, evaluator: EvaluatorResult) -> str:
         if evaluator.overall_score >= 85:
-            return f"This brief already has enough structure for an implementation-ready blueprint: {planner.title} can ship as a polished, explainable workflow."
+            return f"{planner.title} has enough detail to produce a reviewable first implementation plan."
         if "ai" in planner.themes:
-            return f"The best hook is the visible agent pipeline: {planner.title} turns a brief into a scoring-backed build plan."
+            return f"The useful hook is the visible staged workflow: {planner.title} turns a brief into a scoring-backed build plan."
         return f"The hook is the clean product story: {planner.title} turns ambiguity into a concrete, reviewable build blueprint."

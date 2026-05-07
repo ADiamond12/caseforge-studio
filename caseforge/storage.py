@@ -107,8 +107,8 @@ class DossierStorage:
         preset = str(brief.get("preset", "")).strip()
         provider = str(brief.get("provider", "")).strip()
         summary = (
-            f"{objective} Recommendation: {recommendation}. "
-            f"Goal: {goal}. Preset: {preset}. Provider: {provider}."
+            f"Recommendation: {recommendation}. Preset: {preset}. Provider: {provider}. "
+            f"{objective} Goal: {goal}."
         ).strip()
         return summary[:220]
 
