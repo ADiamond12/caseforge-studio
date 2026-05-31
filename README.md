@@ -37,6 +37,10 @@ Brief
 
 The deterministic path is the primary product path. The live provider is an enhancement layer, not a dependency for the base workflow.
 
+## Demo Screenshot
+
+![CaseForge Studio local web app](docs/screenshots/web-app.png)
+
 ## Quickstart
 
 From the `caseforge-studio` project root:
@@ -170,6 +174,7 @@ Example request:
 caseforge-studio/
 |-- .github/
 |-- caseforge/
+|-- docs/
 |-- examples/
 |   |-- sample-blueprint.md
 |   `-- briefs/

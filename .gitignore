@@ -14,6 +14,7 @@ Thumbs.db
 .cache/
 *.db
 *.sqlite3
+.*.log
 outputs/
 build/
 dist/
