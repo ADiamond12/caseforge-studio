@@ -17,6 +17,13 @@ const insightRow = document.getElementById('insight-row');
 const sectionGrid = document.getElementById('section-grid');
 const sectionTemplate = document.getElementById('section-template');
 const previewButton = document.getElementById('preview-button');
+const forgeButton = document.getElementById('forge-button');
+const sampleButton = document.getElementById('sample-button');
+const copyBriefButton = document.getElementById('copy-brief-button');
+const copyMarkdownButton = document.getElementById('copy-markdown-button');
+const readinessCard = document.getElementById('readiness-card');
+const readinessTitle = document.getElementById('readiness-title');
+const readinessCopy = document.getElementById('readiness-copy');
 const refreshRecentButton = document.getElementById('refresh-recent-button');
 const recentList = document.getElementById('recent-list');
 const compareSelectionLabel = document.getElementById('compare-selection');
@@ -106,11 +113,42 @@ function loadPreset(name) {
 
 function updateMeta() {
   const words = tokenize(projectBrief.value).length;
-  briefMeta.textContent = `${words} word${words === 1 ? '' : 's'} - ${words < 20 ? 'add more context' : 'ready for a first pass'}.`;
+  const state = getBriefReadiness(words);
+  briefMeta.textContent = `${words} word${words === 1 ? '' : 's'} - ${state.meta}.`;
+  readinessCard.dataset.state = state.kind;
+  readinessTitle.textContent = state.title;
+  readinessCopy.textContent = state.copy;
 }
 
 function tokenize(text) {
   return text.trim().split(/\s+/).filter(Boolean);
+}
+
+function getBriefReadiness(words) {
+  if (words < 8) {
+    return {
+      kind: 'low',
+      title: 'Too thin for a useful blueprint',
+      meta: 'add the user, input, and expected artifact',
+      copy: 'A one-line idea can be previewed, but persisted blueprints work better with at least a user, input source, output artifact, and review constraint.',
+    };
+  }
+
+  if (words < 20) {
+    return {
+      kind: 'medium',
+      title: 'Usable first pass',
+      meta: 'ready, but more context will improve sections',
+      copy: 'This is enough for a first pass. Add success criteria, constraints, or review audience if you want a stronger implementation path.',
+    };
+  }
+
+  return {
+    kind: 'high',
+    title: 'Ready for a serious pass',
+    meta: 'ready for generation',
+    copy: 'The brief has enough context for problem framing, architecture notes, tradeoffs, and a delivery path.',
+  };
 }
 
 function readStoredValue(key) {
@@ -196,12 +234,15 @@ function renderDossier(payload, meta = {}) {
 
 async function requestDossier(endpoint, messages) {
   const payload = buildPayload();
-  if (!payload.brief) {
-    setStatus('Enter a project idea first.', 'warning');
+  const words = tokenize(payload.brief).length;
+  if (words < 8) {
+    setStatus('Add a little more context before generating: user, input material, and expected output.', 'warning');
+    projectBrief.focus();
     return;
   }
 
   writeStoredValue('caseforge:lastBrief', payload.brief);
+  setBusy(true);
   setStatus(messages.pending, 'pending');
   transportChip.textContent = 'Backend: connecting';
 
@@ -231,7 +272,21 @@ async function requestDossier(endpoint, messages) {
     markdownChip.textContent = 'Markdown: unavailable';
     markdownPath.textContent = 'No export path available while the backend is unavailable.';
     setStatus(`${messages.failure} ${error.message}`, 'warning');
+  } finally {
+    setBusy(false);
+    renderCompareSelectionState();
   }
+}
+
+function setBusy(isBusy) {
+  document.body.classList.toggle('is-busy', isBusy);
+  [forgeButton, previewButton, sampleButton, copyBriefButton, copyMarkdownButton, refreshRecentButton, compareButton, clearCompareButton].forEach(
+    (button) => {
+      if (button) {
+        button.disabled = isBusy;
+      }
+    },
+  );
 }
 
 function buildLocalDossier(payload) {
@@ -336,7 +391,7 @@ function renderRecentDossiers(items) {
   if (!items.length) {
     const empty = document.createElement('p');
     empty.className = 'recent-empty';
-    empty.textContent = 'No saved blueprints yet.';
+    empty.textContent = 'No saved blueprints yet. Use Forge blueprint to create a persisted run, or Preview only to test the pipeline without writing files.';
     recentList.appendChild(empty);
     return;
   }
@@ -627,16 +682,16 @@ document.querySelectorAll('.preset').forEach((button) => {
   button.addEventListener('click', () => loadPreset(button.dataset.preset));
 });
 
-document.getElementById('sample-button').addEventListener('click', () => {
+sampleButton.addEventListener('click', () => {
   renderDossier(buildLocalDossier(buildPayload()), { source: 'local sample' });
   setStatus('Sample blueprint loaded.', 'success');
 });
 
-document.getElementById('copy-brief-button').addEventListener('click', () => {
+copyBriefButton.addEventListener('click', () => {
   copyText(projectBrief.value.trim(), 'Brief copied to clipboard.');
 });
 
-document.getElementById('copy-markdown-button').addEventListener('click', () => {
+copyMarkdownButton.addEventListener('click', () => {
   copyText(markdownPath.textContent.trim(), 'Markdown path copied.');
 });
 

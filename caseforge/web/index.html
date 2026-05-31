@@ -18,16 +18,16 @@
   <header class="hero shell">
     <div class="hero-copy">
       <p class="eyebrow">CaseForge Studio</p>
-      <h1>Turn a rough idea into an industry-ready project blueprint.</h1>
+      <h1>Turn a rough idea into a review-ready implementation blueprint.</h1>
       <p class="lede">
-        Draft a concept, generate a structured plan, and present it like a product team had already
-        debated the tradeoffs for you.
+        Draft a concept, generate a structured plan, compare saved runs, and keep the deterministic
+        output visible before any optional provider refinement.
       </p>
       <div class="hero-badges" aria-label="Key features">
-        <span>Static UI</span>
-        <span>Live API</span>
-        <span>Markdown export</span>
-        <span>Responsive</span>
+        <span>Deterministic core</span>
+        <span>Local API</span>
+        <span>Saved runs</span>
+        <span>Compare mode</span>
       </div>
     </div>
 
@@ -37,6 +37,7 @@
         <li>Executive summary with a crisp product angle</li>
         <li>Problem, audience, and differentiation breakdown</li>
         <li>Architecture, risks, and delivery checkpoints</li>
+        <li>Markdown, JSON, and summary files for saved runs</li>
       </ul>
     </aside>
   </header>
@@ -46,7 +47,7 @@
       <div class="panel-header">
         <div>
           <p class="card-label">Brief studio</p>
-          <h2>Start with one sentence, or something messier.</h2>
+          <h2>Start from a messy brief and make the output inspectable.</h2>
         </div>
         <span class="status-chip" id="transport-chip">Backend: idle</span>
       </div>
@@ -58,10 +59,21 @@
             id="project-brief"
             name="projectBrief"
             rows="8"
+            minlength="20"
             placeholder="Example: Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan."
             required
           ></textarea>
         </label>
+
+        <div class="readiness-card" id="readiness-card" aria-live="polite">
+          <div>
+            <p class="card-label">Readiness check</p>
+            <strong id="readiness-title">Add more context</strong>
+          </div>
+          <p id="readiness-copy">
+            A stronger brief names the user, input material, output artifact, and one review constraint.
+          </p>
+        </div>
 
         <div class="field-grid">
           <label class="field" for="audience">
@@ -122,7 +134,7 @@
         </div>
 
         <div class="actions">
-          <button type="submit" class="primary">Forge blueprint</button>
+          <button type="submit" class="primary" id="forge-button">Forge blueprint</button>
           <button type="button" id="preview-button" class="secondary">Preview only</button>
           <button type="button" id="sample-button" class="secondary">Load sample</button>
           <button type="button" id="copy-brief-button" class="ghost">Copy brief</button>
@@ -130,7 +142,7 @@
 
         <p class="helper" id="brief-meta">0 words - ready for a first pass.</p>
         <p class="status-line" id="status" role="status" aria-live="polite">
-          Enter a project idea, then generate a blueprint.
+          Load a sample, preview without saving, or create a persisted blueprint.
         </p>
       </form>
 
@@ -143,7 +155,7 @@
           <button type="button" id="refresh-recent-button" class="ghost compact">Refresh</button>
         </div>
         <p class="recent-helper">
-          Compare runs by score, preset, provider path, and recommendation before opening a full blueprint.
+          Compare saved outputs by score, preset, provider path, and recommendation before opening a full blueprint.
         </p>
         <div class="recent-list" id="recent-list">
           <p class="recent-empty">No saved blueprints yet.</p>

@@ -67,8 +67,17 @@ button {
   transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 button:hover {
   transform: translateY(-1px);
+}
+
+button:disabled:hover {
+  transform: none;
 }
 
 button:active {
@@ -206,6 +215,41 @@ button:active {
   gap: 16px;
 }
 
+.readiness-card {
+  display: grid;
+  gap: 8px;
+  padding: 15px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(159, 184, 255, 0.24);
+  background:
+    linear-gradient(135deg, rgba(159, 184, 255, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(4, 10, 18, 0.46);
+}
+
+.readiness-card[data-state='high'] {
+  border-color: rgba(121, 214, 201, 0.38);
+  background:
+    linear-gradient(135deg, rgba(121, 214, 201, 0.14), rgba(255, 255, 255, 0.035)),
+    rgba(4, 10, 18, 0.46);
+}
+
+.readiness-card[data-state='medium'] {
+  border-color: rgba(242, 168, 95, 0.38);
+}
+
+.readiness-card[data-state='low'] {
+  border-color: rgba(246, 210, 138, 0.34);
+}
+
+.readiness-card strong {
+  color: var(--text);
+}
+
+.readiness-card p:last-child {
+  margin: 0;
+  color: var(--text-muted);
+}
+
 .field {
   display: grid;
   gap: 10px;
@@ -283,6 +327,10 @@ select:focus {
   background: linear-gradient(135deg, var(--accent), #f3c37d);
   color: #20130b;
   font-weight: 700;
+}
+
+body.is-busy .primary {
+  box-shadow: 0 0 0 4px rgba(242, 168, 95, 0.09), 0 0 32px rgba(242, 168, 95, 0.14);
 }
 
 .secondary {

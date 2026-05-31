@@ -50,7 +50,7 @@ class OpenAIResponsesProvider(DossierProvider):
             raise ProviderError("OPENAI_API_KEY is not set; falling back to deterministic mode.")
 
         model = brief.provider_model or os.getenv("OPENAI_MODEL", "gpt-5-mini")
-        endpoint = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1/responses")
+        endpoint = os.getenv("OPENAI_RESPONSES_ENDPOINT") or os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1/responses")
         payload = self._build_payload(brief, result, model)
 
         request = Request(

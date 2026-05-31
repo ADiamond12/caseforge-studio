@@ -37,6 +37,18 @@ Brief
 
 The deterministic path is the primary product path. The live provider is an enhancement layer, not a dependency for the base workflow.
 
+## Reviewer Demo Path
+
+The fastest way to evaluate the project is through the local web app:
+
+1. Start the server with `python -m caseforge serve --host 127.0.0.1 --port 8127`.
+2. Open `http://127.0.0.1:8127`.
+3. Load one preset brief and use **Preview only** to inspect the deterministic output without writing files.
+4. Use **Forge blueprint** to create a persisted run under `outputs/<slug>/`.
+5. Open the recent-run panel, select two saved runs, and compare score, preset, provider path, strengths, and risks.
+
+The demo is designed to show product behavior, not just a CLI command: input readiness feedback, backend status, saved-run history, comparison, export paths, and fallback messaging are visible in one screen.
+
 ## Demo Screenshot
 
 ![CaseForge Studio local web app](docs/screenshots/web-app.png)
@@ -96,7 +108,8 @@ Supported environment variables:
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL`
-- `OPENAI_BASE_URL`
+- `OPENAI_RESPONSES_ENDPOINT`
+- `OPENAI_BASE_URL` remains supported as a legacy alias and must point to the full Responses API endpoint.
 
 See [.env.example](.env.example) for the default shape.
 
@@ -200,7 +213,7 @@ caseforge-studio/
 - The OpenAI overlay path should be used only with deliberate credential handling.
 - The default runtime is still a local stdlib HTTP server, not a multi-tenant hosted deployment stack.
 
-## Next Steps
+## Roadmap
 
 - Add a clean deployment wrapper around the local server path
 - Capture one intentional live-provider blueprint artifact
