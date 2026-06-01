@@ -57,6 +57,22 @@ The fastest way to evaluate the project is through the local web app:
 
 The demo is designed to show product behavior, not just a CLI command: input readiness feedback, recovery messaging, backend status, saved-run history, comparison, export paths, and fallback behavior are visible in one screen.
 
+## Reviewer Demo Command
+
+For a repeatable local review, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1
+```
+
+The script installs the package, runs the unittest suite, previews a deterministic blueprint from a committed brief, persists a saved run, and prints the recent-run list. After that, start the web app and compare two saved runs to inspect the practical product loop:
+
+```powershell
+python -m caseforge serve --host 127.0.0.1 --port 8127
+```
+
+This path gives a reviewer one clear chain: rough brief -> deterministic dossier -> saved artifact bundle -> comparison decision.
+
 ## Demo Screenshot
 
 ![CaseForge Studio local web app](docs/screenshots/web-app.png)
