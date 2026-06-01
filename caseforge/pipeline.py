@@ -118,25 +118,25 @@ class DossierPipeline:
     def _storytell(self, planner: PlannerResult, evaluator: EvaluatorResult) -> StorytellerResult:
         hook = self._hook(planner, evaluator)
         pitch = (
-            f"{planner.title} turns a rough brief into a structured build plan, architecture outline, "
-            f"and implementation blueprint for {planner.audience.lower()}."
+            f"{planner.title} gives {planner.audience.lower()} a focused product path: the core workflow, "
+            f"system boundaries, validation points, and delivery risks are visible before implementation starts."
         )
         demo_script = (
-            "Start from a brief in the CLI or API.",
-            "Review the generated blueprint sections and scored recommendations.",
-            "Export the markdown bundle and note the persistence path.",
-            "Explain how the deterministic pipeline keeps outputs explainable and reproducible.",
+            "Create a realistic sample input for the target user.",
+            "Run the core workflow end to end and inspect the main output artifact.",
+            "Review the acceptance checks, risks, and mitigation notes.",
+            "Use the exported blueprint as the implementation handoff.",
         )
         first_talking_point = (
-            "Deterministic staged planning without external model calls."
+            "Deterministic planning path that works without external model calls."
             if "ai" not in planner.themes
-            else "Deterministic AI-style orchestration without external model calls."
+            else "AI-facing workflow boundaries stay explicit and reviewable."
         )
         talking_points = (
             first_talking_point,
-            "Small, testable stages with clean boundaries.",
-            "Markdown-first output that is easy to review during planning or implementation.",
-            "HTTP API and CLI share the same core service layer.",
+            "Target-product modules are separated from generation metadata.",
+            "Acceptance checks and risk notes are part of the handoff, not an afterthought.",
+            "Saved artifacts make iteration and comparison repeatable.",
         )
         return StorytellerResult(
             elevator_pitch=pitch,
@@ -215,67 +215,85 @@ class DossierPipeline:
         return tuple(steps)
 
     def _module_plan(self, themes: tuple[str, ...], brief_text: str) -> tuple[str, ...]:
-        modules = ["brief parser", "planner", "architect", "evaluator", "storyteller", "markdown renderer", "storage layer"]
+        modules = ["intake workspace", "workflow engine", "review dashboard", "export and reporting layer", "audit trail"]
         if "ai" in themes:
-            modules.insert(0, "agent orchestrator")
+            modules.extend(["context preparation", "provider boundary", "human review gate"])
+        if "data" in themes:
+            modules.extend(["source adapters", "normalization pipeline", "metrics store"])
+        if "backend" in themes:
+            modules.extend(["service API", "job queue", "persistence layer"])
+        if "frontend" in themes:
+            modules.extend(["guided UI", "stateful review views"])
+        if "automation" in themes:
+            modules.extend(["scheduler", "run monitor", "exception queue"])
+        if "learning" in themes:
+            modules.extend(["content parser", "practice generator", "progress tracker"])
         tokens = tokenize(brief_text)
         if "api" in tokens or "web" in tokens:
-            modules.append("http api")
+            modules.append("public integration API")
         return tuple(dict.fromkeys(modules))
 
     def _data_flow(self, themes: tuple[str, ...]) -> tuple[str, ...]:
         flow = (
-            "Brief -> normalized input -> planner -> architect -> evaluator -> storyteller -> blueprint export",
-            "Generated blueprint -> filesystem persistence -> API response",
+            "Raw user input -> validation -> normalized workspace -> workflow engine -> review output",
+            "Review output -> acceptance checks -> export bundle -> saved run history",
         )
         if "ai" in themes:
-            flow = flow + ("Agent outputs stay deterministic and inspectable at every stage.",)
+            flow = flow + ("AI/provider output remains behind a review boundary and can fall back to deterministic logic.",)
+        if "data" in themes:
+            flow = flow + ("Source data -> normalization -> quality checks -> metrics and report views.",)
         return flow
 
     def _api_surface(self, themes: tuple[str, ...]) -> tuple[str, ...]:
-        api = (
-            "POST /api/dossiers",
-            "POST /api/dossiers/preview",
-            "GET /api/dossiers",
-            "GET /api/dossiers/compare",
-            "GET /api/dossiers/{slug}",
+        api = [
+            "POST /api/intake",
+            "GET /api/workspaces/{id}",
+            "POST /api/workspaces/{id}/runs",
+            "GET /api/workspaces/{id}/runs",
+            "GET /api/runs/{id}/exports",
             "GET /health",
-        )
-        return api
+        ]
+        if "ai" in themes:
+            api.append("POST /api/runs/{id}/review")
+        if "data" in themes:
+            api.append("GET /api/reports/{id}/metrics")
+        return tuple(api)
 
     def _persistence_plan(self, themes: tuple[str, ...]) -> tuple[str, ...]:
         plan = (
-            "Create one output folder per generated blueprint",
-            "Store markdown and JSON side by side",
-            "Keep a summary text file for quick CLI inspection",
+            "Store one workspace record per project or user flow",
+            "Keep run metadata, review status, and exported artifacts together",
+            "Keep a compact summary for quick handoff inspection",
         )
         if "ai" in themes:
-            plan = plan + ("Preserve stage-level metadata for explainability",)
+            plan = plan + ("Persist provider status and human review decisions separately from raw input",)
+        if "data" in themes:
+            plan = plan + ("Version source snapshots so report deltas can be explained",)
         return plan
 
     def _implementation_notes(self, themes: tuple[str, ...], scope: tuple[str, ...]) -> tuple[str, ...]:
         notes = (
-            "Use only the Python standard library so the project is easy to run anywhere.",
-            "Keep the pipeline deterministic so validation and planning do not depend on external services.",
+            "Keep the first release narrow enough to run locally with fixture data.",
+            "Make the main workflow deterministic before adding optional provider or automation layers.",
         )
         if len(scope) >= 4:
-            notes = notes + ("The scope is intentionally broad enough to reflect product judgment.",)
+            notes = notes + ("Split the build into visible milestones so progress can be reviewed without guessing.",)
         if "ai" in themes:
-            notes = notes + ("Stage names mirror a multi-agent system to make the architecture legible.",)
+            notes = notes + ("Log provider status and human review decisions so AI output never looks unverified.",)
         return notes
 
     def _architecture_summary(self, title: str, objective: str, themes: tuple[str, ...]) -> str:
         theme_phrase = ", ".join(themes)
         return (
-            f"{title} routes one brief through planning, architecture, evaluation, and delivery notes. "
-            f"The deterministic {theme_phrase} pipeline makes the recommendation repeatable and easy to challenge in review."
+            f"{title} should separate intake, workflow execution, review, exports, and audit history. "
+            f"The {theme_phrase} scope needs enough structure for reviewers to inspect decisions, rerun examples, and challenge the delivery path."
         )
 
     def _strengths(self, planner: PlannerResult, architect: ArchitectResult, brief: ProjectBrief) -> tuple[str, ...]:
         strengths = [
-            "The output separates product framing, architecture, scoring, and delivery notes.",
-            "The markdown export gives reviewers one artifact to inspect or hand off.",
-            "The deterministic path makes repeated runs comparable.",
+            "The output separates user workflow, system boundaries, validation, and delivery notes.",
+            "The export bundle gives reviewers one artifact set to inspect or hand off.",
+            "The saved-run path makes repeated planning passes comparable.",
         ]
         if "ai" in planner.themes:
             strengths.append("The AI-facing labels are backed by visible deterministic stages.")
@@ -312,7 +330,7 @@ class DossierPipeline:
         mitigations: list[str] = []
         for risk in risks:
             if "broad" in risk:
-                mitigations.append("Cap the MVP to the blueprint generator, export path, and one clean first-run flow.")
+                mitigations.append("Cap the MVP to one target user, one primary workflow, one export path, and one clean first-run flow.")
             elif "generic" in risk:
                 mitigations.append("Use a specific brief and review the stage output instead of relying on broad product claims.")
             elif "short" in risk:

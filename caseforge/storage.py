@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
 from .models import DossierResult
+
+
+SAFE_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,160}$")
 
 
 class DossierStorage:
@@ -37,6 +41,7 @@ class DossierStorage:
         return persisted
 
     def load_record(self, slug: str) -> dict[str, object]:
+        self._validate_slug(slug)
         path = (self.root / slug / "dossier.json").resolve()
         return json.loads(path.read_text(encoding="utf-8"))
 
@@ -121,3 +126,8 @@ class DossierStorage:
             return datetime.fromisoformat(text.replace("Z", "+00:00"))
         except ValueError:
             return datetime.min
+
+    @staticmethod
+    def _validate_slug(slug: str) -> None:
+        if not SAFE_SLUG_RE.fullmatch(str(slug).strip()):
+            raise ValueError("invalid blueprint slug")

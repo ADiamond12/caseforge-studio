@@ -30,8 +30,20 @@ const compareSelectionLabel = document.getElementById('compare-selection');
 const compareButton = document.getElementById('compare-button');
 const clearCompareButton = document.getElementById('clear-compare-button');
 const compareResult = document.getElementById('compare-result');
+const alertPanel = document.getElementById('alert-panel');
+const scoreValue = document.getElementById('score-value');
+const recommendationValue = document.getElementById('recommendation-value');
+const providerValue = document.getElementById('provider-value');
+const providerMessage = document.getElementById('provider-message');
+const artifactValue = document.getElementById('artifact-value');
+const artifactMessage = document.getElementById('artifact-message');
+const exportMarkdownPath = document.getElementById('export-markdown-path');
+const exportJsonPath = document.getElementById('export-json-path');
+const exportSummaryPath = document.getElementById('export-summary-path');
+const openMarkdownLink = document.getElementById('open-markdown-link');
 let recentDossiers = [];
 const compareSelection = new Set();
+const formStateKey = 'caseforge:formState';
 
 const presetBriefs = {
   'ai-copilot': {
@@ -73,16 +85,24 @@ const presetBriefs = {
 };
 
 function bootstrap() {
+  const savedState = readStoredJson(formStateKey);
   const savedBrief = readStoredValue('caseforge:lastBrief');
-  if (savedBrief) {
+  if (savedState?.brief) {
+    applyPayloadToForm(savedState);
+  } else if (savedBrief) {
     projectBrief.value = savedBrief;
   } else {
-    loadPreset('ai-copilot');
+    loadPreset('ai-copilot', { persist: false });
   }
 
   updateMeta();
   renderDossier(buildLocalDossier(buildPayload()), { source: 'local sample' });
-  setStatus('Local sample blueprint loaded. Use Preview or Create blueprint to run the backend.', 'pending');
+  setStatus('Local sample blueprint loaded. Use Preview or Forge blueprint to run the backend.', 'pending');
+  setAlert(
+    'Start with a preview.',
+    'The local sample shows layout only. Preview uses the backend without saving; Forge blueprint creates export files.',
+    'info',
+  );
   renderCompareSelectionState();
   refreshRecentDossiers();
   document.documentElement.classList.add('ready');
@@ -99,16 +119,33 @@ function buildPayload() {
   };
 }
 
-function loadPreset(name) {
+function loadPreset(name, options = { persist: true }) {
   const next = presetBriefs[name];
   if (!next) return;
-  projectBrief.value = next.brief;
-  audience.value = next.audience;
-  mode.value = next.mode;
-  goal.value = next.goal;
-  preset.value = next.preset;
-  provider.value = next.provider;
+  applyPayloadToForm(next);
   updateMeta();
+  if (options.persist) {
+    writeFormState();
+  }
+}
+
+function applyPayloadToForm(payload) {
+  projectBrief.value = payload.brief || '';
+  setSelectValue(audience, payload.audience);
+  setSelectValue(mode, payload.mode);
+  setSelectValue(goal, payload.goal);
+  setSelectValue(preset, payload.preset);
+  setSelectValue(provider, payload.provider);
+}
+
+function setSelectValue(selectElement, value) {
+  if (!value) {
+    return;
+  }
+  const hasOption = Array.from(selectElement.options).some((option) => option.value === value);
+  if (hasOption) {
+    selectElement.value = value;
+  }
 }
 
 function updateMeta() {
@@ -168,14 +205,48 @@ function writeStoredValue(key, value) {
   return true;
 }
 
+function readStoredJson(key) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeFormState() {
+  try {
+    window.localStorage.setItem(formStateKey, JSON.stringify(buildPayload()));
+  } catch {
+    return false;
+  }
+  return true;
+}
+
 function normalizeDossier(payload, fallbackMeta = {}) {
   const raw = payload?.title || payload?.summary || payload?.sections ? payload : (payload?.dossier ?? payload ?? {});
+  const dossierRecord = payload?.dossier ?? raw?.dossier ?? {};
+  const evaluator = dossierRecord?.evaluator ?? raw?.evaluator ?? {};
   const markdownPathValue =
     payload?.markdownPath ??
     payload?.markdown_path ??
     raw?.markdownPath ??
     raw?.markdown_path ??
     fallbackMeta.markdownPath ??
+    '';
+  const jsonPathValue =
+    payload?.jsonPath ??
+    payload?.json_path ??
+    raw?.jsonPath ??
+    raw?.json_path ??
+    fallbackMeta.jsonPath ??
+    '';
+  const summaryPathValue =
+    payload?.summaryPath ??
+    payload?.summary_path ??
+    raw?.summaryPath ??
+    raw?.summary_path ??
+    fallbackMeta.summaryPath ??
     '';
 
   const sections = Array.isArray(raw.sections) && raw.sections.length
@@ -192,10 +263,15 @@ function normalizeDossier(payload, fallbackMeta = {}) {
     insights: Array.isArray(raw.insights) ? raw.insights : [],
     sections,
     markdownPath: markdownPathValue,
+    jsonPath: jsonPathValue,
+    summaryPath: summaryPathValue,
     persisted: payload?.persisted ?? raw?.persisted ?? Boolean(markdownPathValue),
     preview: payload?.preview ?? raw?.preview ?? false,
     providerStatus: payload?.providerStatus ?? payload?.provider_status ?? raw?.providerStatus ?? raw?.provider_status ?? 'deterministic',
     provider: payload?.provider ?? raw?.provider ?? raw?.brief?.provider ?? 'deterministic',
+    providerMessage: payload?.providerMessage ?? payload?.provider_message ?? raw?.providerMessage ?? raw?.provider_message ?? '',
+    score: evaluator?.overall_score ?? payload?.score ?? raw?.score ?? null,
+    recommendation: evaluator?.recommendation ?? payload?.recommendation ?? raw?.recommendation ?? '',
   };
 }
 
@@ -204,11 +280,36 @@ function renderDossier(payload, meta = {}) {
   dossierTitle.textContent = dossier.title;
   dossierSummary.textContent = dossier.summary;
   markdownPath.textContent = dossier.markdownPath || 'No export path yet.';
+  exportMarkdownPath.textContent = dossier.markdownPath || 'Not saved yet';
+  exportJsonPath.textContent = dossier.jsonPath || 'Not saved yet';
+  exportSummaryPath.textContent = dossier.summaryPath || 'Not saved yet';
+  if (openMarkdownLink) {
+    const canOpenMarkdown = dossier.markdownPath && dossier.persisted;
+    openMarkdownLink.classList.toggle('is-disabled', !canOpenMarkdown);
+    openMarkdownLink.toggleAttribute('aria-disabled', !canOpenMarkdown);
+    if (canOpenMarkdown) {
+      openMarkdownLink.href = `/${dossier.markdownPath.replace(/\\/g, '/')}`;
+      openMarkdownLink.setAttribute('target', '_blank');
+      openMarkdownLink.setAttribute('rel', 'noopener');
+    } else {
+      openMarkdownLink.removeAttribute('href');
+      openMarkdownLink.removeAttribute('target');
+      openMarkdownLink.removeAttribute('rel');
+    }
+  }
   markdownChip.textContent = dossier.persisted ? 'Markdown: ready' : 'Markdown: preview only';
   sourceChip.textContent = `Source: ${meta.source || 'backend'}`;
   transportChip.textContent = meta.source === 'local sample'
     ? 'Backend: sample seed'
     : `Backend: ${dossier.provider} (${dossier.providerStatus})`;
+  scoreValue.textContent = dossier.score === null ? 'Preview' : `${dossier.score}/100`;
+  recommendationValue.textContent = dossier.recommendation || (dossier.persisted ? 'Saved run' : 'No backend score yet');
+  providerValue.textContent = `${capitalize(dossier.provider)} (${dossier.providerStatus})`;
+  providerMessage.textContent = dossier.providerMessage || 'Deterministic path remains the default review path.';
+  artifactValue.textContent = dossier.persisted ? 'Saved' : 'Preview';
+  artifactMessage.textContent = dossier.persisted
+    ? 'Markdown, JSON, and summary paths are available below.'
+    : 'Persist the run to create export files.';
 
   insightRow.innerHTML = '';
   const insights = dossier.insights.length
@@ -230,6 +331,13 @@ function renderDossier(payload, meta = {}) {
     card.querySelector('.section-body').textContent = section.body;
     sectionGrid.appendChild(card);
   });
+
+  if (!dossier.sections.length) {
+    const empty = document.createElement('article');
+    empty.className = 'section-card glass is-empty';
+    empty.innerHTML = '<p class="card-label section-eyebrow">No sections</p><h3>Backend returned no section data</h3><p class="section-body">Try Preview only first, then persist the run once the response looks correct.</p>';
+    sectionGrid.appendChild(empty);
+  }
 }
 
 async function requestDossier(endpoint, messages) {
@@ -237,13 +345,20 @@ async function requestDossier(endpoint, messages) {
   const words = tokenize(payload.brief).length;
   if (words < 8) {
     setStatus('Add a little more context before generating: user, input material, and expected output.', 'warning');
+    setAlert(
+      'Brief is too thin.',
+      'Add the user, source material, expected output, and one review constraint before generating a saved blueprint.',
+      'warning',
+    );
     projectBrief.focus();
     return;
   }
 
   writeStoredValue('caseforge:lastBrief', payload.brief);
+  writeFormState();
   setBusy(true);
   setStatus(messages.pending, 'pending');
+  setAlert('Working on the blueprint.', messages.pending, 'pending');
   transportChip.textContent = 'Backend: connecting';
 
   try {
@@ -263,6 +378,7 @@ async function requestDossier(endpoint, messages) {
     const data = await response.json();
     renderDossier(data, { source: messages.source });
     setStatus(messages.success, 'success');
+    setAlert(messages.success, endpoint === '/api/dossiers' ? 'Export paths are now available in the saved-run bundle.' : 'No files were written during preview.', 'success');
     if (endpoint === '/api/dossiers') {
       refreshRecentDossiers();
     }
@@ -271,7 +387,15 @@ async function requestDossier(endpoint, messages) {
     sourceChip.textContent = 'Source: last successful render';
     markdownChip.textContent = 'Markdown: unavailable';
     markdownPath.textContent = 'No export path available while the backend is unavailable.';
+    exportMarkdownPath.textContent = 'Not saved yet';
+    exportJsonPath.textContent = 'Not saved yet';
+    exportSummaryPath.textContent = 'Not saved yet';
     setStatus(`${messages.failure} ${error.message}`, 'warning');
+    setAlert(
+      messages.failure,
+      `Recovery: confirm the local server is running, keep provider set to deterministic, then retry Preview only. ${error.message}`,
+      'warning',
+    );
   } finally {
     setBusy(false);
     renderCompareSelectionState();
@@ -280,6 +404,15 @@ async function requestDossier(endpoint, messages) {
 
 function setBusy(isBusy) {
   document.body.classList.toggle('is-busy', isBusy);
+  const labels = [
+    [forgeButton, 'Forging...', 'Forge blueprint'],
+    [previewButton, 'Previewing...', 'Preview only'],
+  ];
+  labels.forEach(([button, busyLabel, idleLabel]) => {
+    if (button) {
+      button.textContent = isBusy ? busyLabel : idleLabel;
+    }
+  });
   [forgeButton, previewButton, sampleButton, copyBriefButton, copyMarkdownButton, refreshRecentButton, compareButton, clearCompareButton].forEach(
     (button) => {
       if (button) {
@@ -333,6 +466,13 @@ function buildLocalDossier(payload) {
     persisted: false,
     preview: true,
     markdownPath: '',
+    jsonPath: '',
+    summaryPath: '',
+    provider: payload.provider,
+    providerStatus: 'local sample',
+    providerMessage: 'Local browser sample, not a persisted backend run.',
+    score: null,
+    recommendation: 'Preview the backend to score this brief',
   };
 }
 
@@ -654,6 +794,28 @@ function setStatus(message, kind) {
   statusLine.dataset.kind = kind;
 }
 
+function setAlert(title, message, kind) {
+  if (!alertPanel) {
+    return;
+  }
+  alertPanel.dataset.kind = kind;
+  alertPanel.innerHTML = `<strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span>`;
+}
+
+function capitalize(value) {
+  const text = String(value || '').trim();
+  return text ? `${text[0].toUpperCase()}${text.slice(1)}` : 'Unknown';
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 briefForm.addEventListener('submit', (event) => {
   event.preventDefault();
   requestDossier('/api/dossiers', {
@@ -676,6 +838,11 @@ previewButton.addEventListener('click', () => {
 projectBrief.addEventListener('input', () => {
   updateMeta();
   writeStoredValue('caseforge:lastBrief', projectBrief.value);
+  writeFormState();
+});
+
+[audience, mode, goal, preset, provider].forEach((field) => {
+  field.addEventListener('change', writeFormState);
 });
 
 document.querySelectorAll('.preset').forEach((button) => {

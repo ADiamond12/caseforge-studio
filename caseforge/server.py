@@ -53,6 +53,9 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
                 slug = path.removeprefix("/api/dossiers/").strip("/")
                 try:
                     record = service.load_public_payload(slug)
+                except ValueError as exc:
+                    self._json_response({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+                    return
                 except FileNotFoundError:
                     self._json_response({"error": f"blueprint not found: {slug}"}, status=HTTPStatus.NOT_FOUND)
                     return
@@ -98,7 +101,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
                 self._json_response({"error": f"file not found: {path.name}"}, status=HTTPStatus.NOT_FOUND)
                 return
 
-            if allowed_root is not None and not str(resolved).startswith(str(allowed_root)):
+            if allowed_root is not None and not resolved.is_relative_to(allowed_root):
                 self._json_response({"error": "path escapes allowed root"}, status=HTTPStatus.FORBIDDEN)
                 return
 

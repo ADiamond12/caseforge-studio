@@ -32,13 +32,13 @@
     </div>
 
     <aside class="hero-card glass">
-      <p class="card-label">What the app produces</p>
-      <ul class="promise-list">
-        <li>Executive summary with a crisp product angle</li>
-        <li>Problem, audience, and differentiation breakdown</li>
-        <li>Architecture, risks, and delivery checkpoints</li>
-        <li>Markdown, JSON, and summary files for saved runs</li>
-      </ul>
+      <p class="card-label">Reviewer flow</p>
+      <ol class="review-flow">
+        <li><span>01</span><strong>Shape the brief</strong><small>Name the user, input material, output artifact, and review constraint.</small></li>
+        <li><span>02</span><strong>Preview first</strong><small>Inspect the deterministic plan before writing any files.</small></li>
+        <li><span>03</span><strong>Persist a run</strong><small>Save Markdown, JSON, and summary artifacts under one run folder.</small></li>
+        <li><span>04</span><strong>Compare outputs</strong><small>Use score, preset, provider path, strength, and risk to choose a direction.</small></li>
+      </ol>
     </aside>
   </header>
 
@@ -53,6 +53,11 @@
       </div>
 
       <form id="brief-form" class="brief-form">
+        <div class="alert-panel" id="alert-panel" data-kind="info" role="status" aria-live="polite">
+          <strong>Ready for local review.</strong>
+          <span>Load a preset, preview the deterministic blueprint, then persist a run when the direction is worth keeping.</span>
+        </div>
+
         <label for="project-brief" class="field">
           <span>Project idea</span>
           <textarea
@@ -138,6 +143,7 @@
           <button type="button" id="preview-button" class="secondary">Preview only</button>
           <button type="button" id="sample-button" class="secondary">Load sample</button>
           <button type="button" id="copy-brief-button" class="ghost">Copy brief</button>
+          <a href="#blueprint-panel" class="ghost jump-link">View blueprint</a>
         </div>
 
         <p class="helper" id="brief-meta">0 words - ready for a first pass.</p>
@@ -145,6 +151,29 @@
           Load a sample, preview without saving, or create a persisted blueprint.
         </p>
       </form>
+
+      <section class="workflow-strip" aria-label="Blueprint workflow">
+        <article>
+          <span>01</span>
+          <strong>Plan</strong>
+          <small>Product angle, user, assumptions, scope.</small>
+        </article>
+        <article>
+          <span>02</span>
+          <strong>Architect</strong>
+          <small>Modules, data flow, API, persistence.</small>
+        </article>
+        <article>
+          <span>03</span>
+          <strong>Evaluate</strong>
+          <small>Score, strengths, risks, mitigations.</small>
+        </article>
+        <article>
+          <span>04</span>
+          <strong>Package</strong>
+          <small>Markdown, JSON, summary, comparison.</small>
+        </article>
+      </section>
 
       <section class="recent-panel">
         <div class="mini-panel-header">
@@ -179,7 +208,7 @@
       </section>
     </section>
 
-    <section class="panel dossier glass" aria-live="polite">
+    <section class="panel dossier glass" id="blueprint-panel" aria-live="polite">
       <div class="panel-header dossier-header">
         <div>
           <p class="card-label">Generated blueprint</p>
@@ -195,8 +224,26 @@
         <p class="card-label">Executive summary</p>
         <p id="dossier-summary">
           The output will appear here, broken into readable sections with enough clarity for a
-          technical reviewer to scan in under a minute.
+          product or engineering reviewer to scan quickly.
         </p>
+      </div>
+
+      <div class="blueprint-metrics" aria-label="Blueprint metadata">
+        <article>
+          <p class="card-label">Readiness score</p>
+          <strong id="score-value">Preview</strong>
+          <span id="recommendation-value">No backend score yet</span>
+        </article>
+        <article>
+          <p class="card-label">Provider path</p>
+          <strong id="provider-value">Deterministic</strong>
+          <span id="provider-message">Local sample only</span>
+        </article>
+        <article>
+          <p class="card-label">Artifact mode</p>
+          <strong id="artifact-value">Preview</strong>
+          <span id="artifact-message">Persist to create export files</span>
+        </article>
       </div>
 
       <div class="insight-row" id="insight-row"></div>
@@ -210,6 +257,30 @@
         </div>
         <button type="button" id="copy-markdown-button" class="ghost">Copy path</button>
       </div>
+
+      <section class="export-panel" aria-label="Export bundle">
+        <div class="mini-panel-header">
+          <div>
+            <p class="card-label">Export bundle</p>
+            <h3>Files produced for saved runs</h3>
+          </div>
+        </div>
+        <div class="export-grid">
+          <article>
+            <span>Markdown</span>
+            <code id="export-markdown-path">Not saved yet</code>
+          </article>
+          <article>
+            <span>JSON</span>
+            <code id="export-json-path">Not saved yet</code>
+          </article>
+          <article>
+            <span>Summary</span>
+            <code id="export-summary-path">Not saved yet</code>
+          </article>
+        </div>
+        <a id="open-markdown-link" class="secondary export-link is-disabled" aria-disabled="true">Open Markdown export</a>
+      </section>
     </section>
   </main>
 

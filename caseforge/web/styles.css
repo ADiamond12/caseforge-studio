@@ -84,6 +84,18 @@ button:active {
   transform: translateY(0);
 }
 
+.jump-link,
+.export-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.jump-link {
+  min-height: 42px;
+}
+
 .shell {
   width: var(--shell-width);
   margin: 0 auto;
@@ -168,10 +180,57 @@ button:active {
   align-self: end;
 }
 
-.promise-list {
+.promise-list,
+.review-flow {
   margin: 0;
+}
+
+.promise-list {
   padding-left: 18px;
   color: var(--text-muted);
+}
+
+.review-flow {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.review-flow li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.review-flow li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.review-flow span {
+  grid-row: span 2;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(121, 214, 201, 0.12);
+  border: 1px solid rgba(121, 214, 201, 0.25);
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.review-flow strong {
+  color: var(--text);
+}
+
+.review-flow small {
+  color: var(--text-muted);
+  line-height: 1.45;
 }
 
 .workspace {
@@ -213,6 +272,42 @@ button:active {
 .brief-form {
   display: grid;
   gap: 16px;
+}
+
+.alert-panel {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(121, 214, 201, 0.28);
+  background: rgba(121, 214, 201, 0.1);
+}
+
+.alert-panel[data-kind='success'] {
+  border-color: rgba(156, 227, 186, 0.42);
+  background: rgba(156, 227, 186, 0.1);
+}
+
+.alert-panel[data-kind='warning'] {
+  border-color: rgba(246, 210, 138, 0.45);
+  background: rgba(246, 210, 138, 0.1);
+}
+
+.alert-panel[data-kind='pending'] {
+  border-color: rgba(159, 184, 255, 0.42);
+  background:
+    linear-gradient(100deg, rgba(159, 184, 255, 0.08), rgba(255, 255, 255, 0.04), rgba(159, 184, 255, 0.08)),
+    rgba(159, 184, 255, 0.08);
+  background-size: 220% 100%;
+  animation: stateSweep 1.3s ease-in-out infinite;
+}
+
+.alert-panel strong {
+  color: var(--text);
+}
+
+.alert-panel span {
+  color: var(--text-muted);
 }
 
 .readiness-card {
@@ -389,6 +484,39 @@ body.is-busy .primary {
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--line);
+}
+
+.workflow-strip {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workflow-strip article {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.workflow-strip span {
+  color: var(--accent-2);
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+
+.workflow-strip strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.workflow-strip small {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .mini-panel-header {
@@ -578,6 +706,36 @@ body.is-busy .primary {
   border: 1px solid var(--line);
 }
 
+.blueprint-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 18px;
+}
+
+.blueprint-metrics article {
+  min-width: 0;
+  padding: 15px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.blueprint-metrics strong {
+  display: block;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.blueprint-metrics span {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 #dossier-title {
   max-width: 12ch;
 }
@@ -650,6 +808,54 @@ html.ready .panel.dossier {
   border-top: 1px solid var(--line);
 }
 
+.export-panel {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line);
+}
+
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.export-grid article {
+  min-width: 0;
+  padding: 13px;
+  border-radius: var(--radius-md);
+  background: rgba(4, 10, 18, 0.5);
+  border: 1px solid var(--line);
+}
+
+.export-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.export-grid code {
+  display: block;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.export-link {
+  margin-top: 14px;
+  width: fit-content;
+}
+
+.export-link.is-disabled {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
 #markdown-path {
   color: var(--text);
   word-break: break-all;
@@ -711,6 +917,18 @@ html.ready .panel.dossier {
   }
 }
 
+@keyframes stateSweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 @media (max-width: 980px) {
   .hero,
   .workspace {
@@ -719,6 +937,12 @@ html.ready .panel.dossier {
 
   .hero-copy h1 {
     max-width: 100%;
+  }
+
+  .workflow-strip,
+  .blueprint-metrics,
+  .export-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -738,7 +962,10 @@ html.ready .panel.dossier {
 
   .field-grid,
   .section-grid,
-  .compare-grid {
+  .compare-grid,
+  .workflow-strip,
+  .blueprint-metrics,
+  .export-grid {
     grid-template-columns: 1fr;
   }
 

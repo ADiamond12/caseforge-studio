@@ -1,22 +1,22 @@
 # CaseForge Studio
 
-CaseForge Studio turns a rough product idea into an implementation-ready project blueprint through a deterministic multi-stage pipeline. It ships with a local web app, CLI, local HTTP API, persisted run history, and an optional OpenAI overlay that refines the final blueprint without becoming the only path through the product.
+CaseForge Studio turns a rough product idea into an implementation blueprint that a reviewer can inspect before any build work starts. It ships with a local web app, CLI, HTTP API, persisted run history, comparison flow, and an optional OpenAI overlay that refines the final blueprint without becoming the only path through the product.
 
-The core thesis is simple: a strong project idea should become explainable, scoped, reviewable, and ready for execution. CaseForge Studio helps turn vague ideas into artifacts that are easier to evaluate, compare, and improve.
+The core thesis is simple: a useful idea should become scoped, explainable, comparable, and ready for a delivery conversation. CaseForge turns vague prompts into reviewable artifacts instead of treating the generated text as the final answer.
 
-## Why It Matters
+## What This Project Proves
 
 - Deterministic by default, so the product remains usable without external services.
 - Optional live-provider overlay for stronger AI-assisted refinement when credentials are available.
 - Multiple surfaces from one shared service layer: CLI, browser UI, and HTTP API.
-- Saved runs and comparison views make iteration visible instead of hand-wavy.
-- Fast to evaluate in a technical review: brief in, blueprint out, compare runs, choose the strongest implementation path.
+- Saved runs and comparison views make iteration concrete instead of relying on a single generated answer.
+- Fast to evaluate in a handoff: brief in, blueprint out, compare runs, choose the strongest implementation path.
 
-## Feature Set
+## Product Surface
 
 - Planner, architect, evaluator, and delivery-path stages
 - Markdown, JSON, and summary export under `outputs/` for persisted local runs
-- Local web app with blueprint preview, saved-run browsing, and comparison
+- Local web app with readiness feedback, blueprint preview, saved-run browsing, export bundle, and comparison
 - Local HTTP API for generation, preview, retrieval, and compare flows
 - Optional OpenAI Responses API overlay with deterministic fallback
 - Standard-library-only backend runtime
@@ -37,7 +37,7 @@ Brief
 
 The deterministic path is the primary product path. The live provider is an enhancement layer, not a dependency for the base workflow.
 
-## Reviewer Demo Path
+## Local Product Walkthrough
 
 The fastest way to evaluate the project is through the local web app:
 
@@ -45,9 +45,10 @@ The fastest way to evaluate the project is through the local web app:
 2. Open `http://127.0.0.1:8127`.
 3. Load one preset brief and use **Preview only** to inspect the deterministic output without writing files.
 4. Use **Forge blueprint** to create a persisted run under `outputs/<slug>/`.
-5. Open the recent-run panel, select two saved runs, and compare score, preset, provider path, strengths, and risks.
+5. Review the export bundle: Markdown, JSON, and summary paths should appear together.
+6. Open the recent-run panel, select two saved runs, and compare score, preset, provider path, strengths, and risks.
 
-The demo is designed to show product behavior, not just a CLI command: input readiness feedback, backend status, saved-run history, comparison, export paths, and fallback messaging are visible in one screen.
+The demo is designed to show product behavior, not just a CLI command: input readiness feedback, recovery messaging, backend status, saved-run history, comparison, export paths, and fallback behavior are visible in one screen.
 
 ## Demo Screenshot
 
@@ -163,14 +164,15 @@ Example request:
 }
 ```
 
-## Usage Flow
+## Review Walkthrough
 
 1. Start the web app and paste a rough project idea into the brief box.
-2. Generate a blueprint and review the score, architecture section, and delivery path.
-3. Open the committed sample blueprint at `examples/sample-blueprint.md` or a locally generated artifact under `outputs/<slug>/dossier.md`.
-4. Compare two runs to review score movement, provider path, and recommendation changes.
-5. Explain why the deterministic path is the default and when the live provider is worth using.
-6. Close with the test suite and release checklist.
+2. Preview the blueprint first and check the score, recommendation, architecture section, and delivery path.
+3. Persist a run only when the preview is worth keeping.
+4. Open the committed sample blueprint at `examples/sample-blueprint.md` or a locally generated artifact under `outputs/<slug>/dossier.md`.
+5. Compare two runs to review score movement, provider path, and recommendation changes.
+6. Explain why the deterministic path is the default and when the live provider is worth using.
+7. Close with the test suite and release checklist.
 
 ## Verification
 

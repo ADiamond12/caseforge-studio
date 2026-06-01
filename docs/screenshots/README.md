@@ -13,4 +13,4 @@ Refresh flow:
 python -m caseforge serve --host 127.0.0.1 --port 8127
 ```
 
-Open `http://127.0.0.1:8127`, wait for the sample blueprint to render, and capture the workspace without local file paths or generated output directories visible.
+Open `http://127.0.0.1:8127`, load the AI ops copilot preset, generate one deterministic saved run, and capture the workspace without absolute local paths, credentials, browser profile data, or private material. Relative `outputs/<slug>/...` artifact paths are acceptable because they are part of the product workflow.

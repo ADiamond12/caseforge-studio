@@ -14,11 +14,11 @@
 Deterministic pipeline used.
 
 ## Brief
-Release Readiness Planner: turn incident notes, service metrics, owner comments, and follow-up tasks into an action plan with risks, owners, validation checks, and next-step recommendations.
+Build a release readiness planner that turns incident notes, service metrics, owner comments, and follow-up tasks into an action plan with risks, owners, validation checks, and next-step recommendations.
 
 ## Planner
-- Objective: Turn Release Readiness Planner into a plan engineering leads can review quickly, with emphasis on data decisions and the concrete inputs: action, checks, comments.
-- Themes: data
+- Objective: Turn Release Readiness Planner into a plan engineering leads can review quickly, with emphasis on backend decisions and the concrete inputs: release, readiness, planner.
+- Themes: backend, data
 
 ### Assumptions
 - The intended audience is Engineering leads.
@@ -46,46 +46,53 @@ Release Readiness Planner: turn incident notes, service metrics, owner comments,
 - Use the success metrics as the final validation checklist
 
 ## Architecture
-Release Readiness Planner routes one brief through planning, architecture, evaluation, and delivery notes. The deterministic data pipeline makes the recommendation repeatable and easy to challenge in review.
+Release Readiness Planner should separate intake, workflow execution, review, exports, and audit history. The backend, data scope needs enough structure for reviewers to inspect decisions, rerun examples, and challenge the delivery path.
 
 ### Modules
-- brief parser
-- planner
-- architect
-- evaluator
-- storyteller
-- markdown renderer
-- storage layer
+- intake workspace
+- workflow engine
+- review dashboard
+- export and reporting layer
+- audit trail
+- source adapters
+- normalization pipeline
+- metrics store
+- service API
+- job queue
+- persistence layer
 
 ### Data Flow
-- Brief -> normalized input -> planner -> architect -> evaluator -> storyteller -> blueprint export
-- Generated blueprint -> filesystem persistence -> API response
+- Raw user input -> validation -> normalized workspace -> workflow engine -> review output
+- Review output -> acceptance checks -> export bundle -> saved run history
+- Source data -> normalization -> quality checks -> metrics and report views.
 
 ### API Surface
-- POST /api/dossiers
-- POST /api/dossiers/preview
-- GET /api/dossiers
-- GET /api/dossiers/compare
-- GET /api/dossiers/{slug}
+- POST /api/intake
+- GET /api/workspaces/{id}
+- POST /api/workspaces/{id}/runs
+- GET /api/workspaces/{id}/runs
+- GET /api/runs/{id}/exports
 - GET /health
+- GET /api/reports/{id}/metrics
 
 ### Persistence
-- Create one output folder per generated blueprint
-- Store markdown and JSON side by side
-- Keep a summary text file for quick CLI inspection
+- Store one workspace record per project or user flow
+- Keep run metadata, review status, and exported artifacts together
+- Keep a compact summary for quick handoff inspection
+- Version source snapshots so report deltas can be explained
 
 ### Implementation Notes
-- Use only the Python standard library so the project is easy to run anywhere.
-- Keep the pipeline deterministic so validation and planning do not depend on external services.
-- The scope is intentionally broad enough to reflect product judgment.
+- Keep the first release narrow enough to run locally with fixture data.
+- Make the main workflow deterministic before adding optional provider or automation layers.
+- Split the build into visible milestones so progress can be reviewed without guessing.
 
 ## Evaluation
 Recommendation: ship with full-stack framing
 
 ### Strengths
-- The output separates product framing, architecture, scoring, and delivery notes.
-- The markdown export gives reviewers one artifact to inspect or hand off.
-- The deterministic path makes repeated runs comparable.
+- The output separates user workflow, system boundaries, validation, and delivery notes.
+- The export bundle gives reviewers one artifact set to inspect or hand off.
+- The saved-run path makes repeated planning passes comparable.
 - The module breakdown suggests a maintainable implementation plan.
 - The full-stack preset rewards balanced API, UI, and persistence coverage.
 
@@ -96,24 +103,24 @@ Recommendation: ship with full-stack framing
 - The full-stack preset raises expectations for end-to-end polish across backend and UI.
 
 ### Mitigations
-- Cap the MVP to the blueprint generator, export path, and one clean first-run flow.
+- Cap the MVP to one target user, one primary workflow, one export path, and one clean first-run flow.
 - Use a specific brief and review the stage output instead of relying on broad product claims.
 - Anchor the walkthrough in the planner, architect, evaluator, and storyteller stages.
 - Walk through the CLI, API, and UI in one pass so the system feels integrated.
 
 ## Execution Briefing
-Release Readiness Planner turns a rough brief into a structured build plan, architecture outline, and implementation blueprint for engineering leads.
+Release Readiness Planner gives engineering leads a focused product path: the core workflow, system boundaries, validation points, and delivery risks are visible before implementation starts.
 
 Delivery hook: Release Readiness Planner has enough detail to produce a reviewable first implementation plan.
 
 ### Execution Walkthrough
-- Start from a brief in the CLI or API.
-- Review the generated blueprint sections and scored recommendations.
-- Export the markdown bundle and note the persistence path.
-- Explain how the deterministic pipeline keeps outputs explainable and reproducible.
+- Create a realistic sample input for the target user.
+- Run the core workflow end to end and inspect the main output artifact.
+- Review the acceptance checks, risks, and mitigation notes.
+- Use the exported blueprint as the implementation handoff.
 
 ### Key Points
-- Deterministic staged planning without external model calls.
-- Small, testable stages with clean boundaries.
-- Markdown-first output that is easy to review during planning or implementation.
-- HTTP API and CLI share the same core service layer.
+- Deterministic planning path that works without external model calls.
+- Target-product modules are separated from generation metadata.
+- Acceptance checks and risk notes are part of the handoff, not an afterthought.
+- Saved artifacts make iteration and comparison repeatable.

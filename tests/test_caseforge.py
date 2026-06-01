@@ -50,6 +50,34 @@ class CaseForgeTests(unittest.TestCase):
         self.assertIn("#", result.markdown)
         self.assertEqual(result.markdown_path, "")
 
+    def test_pipeline_architecture_targets_submitted_product_not_caseforge_internals(self) -> None:
+        result = DossierPipeline().run(
+            ProjectBrief(
+                brief="Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan.",
+                audience="Engineering lead",
+                mode="Workflow product",
+                goal="Drive implementation clarity",
+                preset="full-stack",
+            )
+        )
+        modules = set(result.architect.modules)
+        forbidden_modules = {"brief parser", "planner", "architect", "evaluator", "storyteller", "markdown renderer"}
+        self.assertEqual(result.planner.title, "AI Operations Copilot")
+        self.assertTrue({"workflow engine", "review dashboard", "provider boundary"}.issubset(modules))
+        self.assertFalse(modules.intersection(forbidden_modules))
+        self.assertIn("intake", result.architect.api_surface[0])
+        self.assertIn("review", " ".join(result.storyteller.talking_points).lower())
+
+    def test_pipeline_infers_human_readable_product_title(self) -> None:
+        result = DossierPipeline().run(
+            ProjectBrief(
+                brief="Build a release readiness planner that turns incident notes, service metrics, and owner comments into an action plan with risks, owners, checks, and next steps.",
+                preset="full-stack",
+            )
+        )
+        self.assertEqual(result.planner.title, "Release Readiness Planner")
+        self.assertIn("release, readiness, planner", result.planner.objective)
+
     def test_service_persists_markdown_json_and_summary(self) -> None:
         result = self.service.generate(
             ProjectBrief(
@@ -85,6 +113,10 @@ class CaseForgeTests(unittest.TestCase):
         self.assertEqual(record["slug"], result.slug)
         self.assertEqual(record["planner"]["title"], result.planner.title)
         self.assertEqual(record["markdown_path"], f"outputs/{result.slug}/dossier.md")
+
+    def test_service_rejects_unsafe_record_slug(self) -> None:
+        with self.assertRaises(ValueError):
+            self.service.load_record("../README")
 
     def test_service_lists_recent_records_with_comparison_metadata(self) -> None:
         result = self.service.generate(
@@ -373,6 +405,22 @@ class CaseForgeTests(unittest.TestCase):
             text=True,
         )
         self.assertTrue(result.stdout.strip() in {"No blueprints found.", ""} or "\t" in result.stdout)
+
+    def test_web_ui_exposes_reviewer_workspace_contract(self) -> None:
+        project_root = Path(__file__).resolve().parents[1]
+        index_html = (project_root / "caseforge" / "web" / "index.html").read_text(encoding="utf-8")
+        app_js = (project_root / "caseforge" / "web" / "app.js").read_text(encoding="utf-8")
+        readme = (project_root / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn('id="alert-panel"', index_html)
+        self.assertIn('id="export-json-path"', index_html)
+        self.assertIn('id="open-markdown-link"', index_html)
+        self.assertIn('class="workflow-strip"', index_html)
+        self.assertIn("function setAlert", app_js)
+        self.assertIn("exportJsonPath.textContent", app_js)
+        self.assertIn("caseforge:formState", app_js)
+        self.assertIn("Local Product Walkthrough", readme)
+        self.assertNotIn("## Feature Set", readme)
 
 
 if __name__ == "__main__":
