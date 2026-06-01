@@ -119,7 +119,7 @@ button:active {
 }
 
 .hero-copy h1 {
-  max-width: 11ch;
+  max-width: 9.8ch;
   font-size: clamp(3rem, 7vw, 6rem);
 }
 
@@ -646,6 +646,32 @@ body.is-busy .primary {
   color: var(--text-muted);
 }
 
+.compare-decision {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(19, 78, 74, 0.16);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(255, 255, 255, 0.94));
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+}
+
+.compare-decision span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.compare-decision p {
+  margin: 0;
+  color: var(--text);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -936,7 +962,9 @@ html.ready .panel.dossier {
   }
 
   .hero-copy h1 {
-    max-width: 100%;
+    max-width: 9.4ch;
+    letter-spacing: -0.025em;
+    overflow-wrap: break-word;
   }
 
   .workflow-strip,
@@ -953,6 +981,24 @@ html.ready .panel.dossier {
 
   .hero {
     padding-top: 28px;
+  }
+
+  .hero-copy h1 {
+    max-width: 100%;
+    font-size: clamp(2.45rem, 11vw, 3.7rem);
+    letter-spacing: -0.02em;
+    overflow-wrap: break-word;
+  }
+
+  .lede {
+    font-size: 1rem;
+  }
+
+  .hero-badges span,
+  .status-chip,
+  .preset,
+  .pill {
+    padding: 0.65rem 0.78rem;
   }
 
   .panel,

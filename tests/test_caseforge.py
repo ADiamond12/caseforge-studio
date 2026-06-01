@@ -191,6 +191,9 @@ class CaseForgeTests(unittest.TestCase):
         self.assertEqual(comparison["items"][0]["slug"], first.slug)
         self.assertEqual(comparison["items"][1]["slug"], second.slug)
         self.assertIn("summary", comparison)
+        self.assertIn("decision_note", comparison)
+        self.assertIsInstance(comparison["decision_note"], str)
+        self.assertGreater(len(comparison["decision_note"]), 40)
         self.assertIsInstance(comparison["score_delta"], int)
         self.assertIn(comparison["winner_slug"], {first.slug, second.slug, None})
 
@@ -419,6 +422,9 @@ class CaseForgeTests(unittest.TestCase):
         self.assertIn("function setAlert", app_js)
         self.assertIn("exportJsonPath.textContent", app_js)
         self.assertIn("caseforge:formState", app_js)
+        self.assertIn("release-planner", app_js)
+        self.assertIn("compare-decision", app_js)
+        self.assertIn("decision_note", app_js)
         self.assertIn("Local Product Walkthrough", readme)
         self.assertNotIn("## Feature Set", readme)
 

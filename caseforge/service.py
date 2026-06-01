@@ -100,6 +100,7 @@ class DossierService:
             "winner_slug": winner_slug,
             "score_delta": score_delta,
             "summary": self._comparison_summary(items, winner_slug, score_delta),
+            "decision_note": self._comparison_decision_note(items, winner_slug, score_delta),
         }
 
     def _brief_from_payload(self, payload: dict[str, object]) -> ProjectBrief:
@@ -309,4 +310,22 @@ class DossierService:
             f"{winner['title']} leads {loser['title']} by {score_delta} points. "
             f"Recommendation: {winner['recommendation']}. "
             f"Compare the provider path and top risk before choosing the stronger saved blueprint."
+        )
+
+    @staticmethod
+    def _comparison_decision_note(items: list[dict[str, object]], winner_slug: str | None, score_delta: int) -> str:
+        left = items[0]
+        right = items[1]
+        if winner_slug is None:
+            return (
+                f"{left['title']} and {right['title']} are close enough that the delivery context should decide. "
+                "Review the top risk, provider path, and target reviewer before turning either run into a handoff."
+            )
+
+        winner = left if left["slug"] == winner_slug else right
+        loser = right if winner is left else left
+        return (
+            f"Start from {winner['title']}: it leads {loser['title']} by {score_delta} readiness points "
+            "and gives the clearer implementation handoff. Keep the alternate run as a source of risks, "
+            "requirements, or framing that may still be useful."
         )

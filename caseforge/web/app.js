@@ -46,6 +46,15 @@ const compareSelection = new Set();
 const formStateKey = 'caseforge:formState';
 
 const presetBriefs = {
+  'release-planner': {
+    brief:
+      'Build a release readiness planner that turns incident notes, service metrics, owner comments, and follow-up tasks into an action plan with risks, owners, validation checks, and next-step recommendations for an engineering lead.',
+    audience: 'Engineering lead',
+    mode: 'Workflow product',
+    goal: 'Drive implementation clarity',
+    preset: 'full-stack',
+    provider: 'deterministic',
+  },
   'ai-copilot': {
     brief:
       'Build an AI operations copilot that turns incident notes, service metrics, and follow-up tasks into a release-ready action plan.',
@@ -92,15 +101,15 @@ function bootstrap() {
   } else if (savedBrief) {
     projectBrief.value = savedBrief;
   } else {
-    loadPreset('ai-copilot', { persist: false });
+    loadPreset('release-planner', { persist: false });
   }
 
   updateMeta();
   renderDossier(buildLocalDossier(buildPayload()), { source: 'local sample' });
-  setStatus('Local sample blueprint loaded. Use Preview or Forge blueprint to run the backend.', 'pending');
+  setStatus('Release planner sample loaded. Preview without saving, then forge a run to create export files.', 'pending');
   setAlert(
-    'Start with a preview.',
-    'The local sample shows layout only. Preview uses the backend without saving; Forge blueprint creates export files.',
+    'Start with the release planner sample.',
+    'Preview uses the backend without saving. Forge blueprint creates Markdown, JSON, and summary exports that can be compared against later runs.',
     'info',
   );
   renderCompareSelectionState();
@@ -709,7 +718,14 @@ function renderComparison(payload) {
   const summary = document.createElement('p');
   summary.className = 'compare-summary';
   summary.textContent = payload.summary || 'Comparison loaded.';
-  compareResult.appendChild(summary);
+  const decision = document.createElement('div');
+  decision.className = 'compare-decision';
+  const decisionLabel = document.createElement('span');
+  decisionLabel.textContent = 'Decision note';
+  const decisionCopy = document.createElement('p');
+  decisionCopy.textContent = payload.decision_note || 'Use the comparison to decide which run is strong enough to become the implementation handoff.';
+  decision.append(decisionLabel, decisionCopy);
+  compareResult.append(decision, summary);
 
   const grid = document.createElement('div');
   grid.className = 'compare-grid';
