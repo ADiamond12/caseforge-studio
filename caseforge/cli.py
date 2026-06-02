@@ -49,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser = subparsers.add_parser("list", help="list recent blueprints")
     list_parser.add_argument("--limit", type=int, default=10)
 
+    compare_parser = subparsers.add_parser("compare", help="compare two persisted blueprint records")
+    compare_parser.add_argument("slugs", nargs=2)
+    compare_parser.add_argument("--json", action="store_true", help="print comparison as JSON")
+    compare_parser.add_argument("--markdown", action="store_true", help="print comparison as Markdown")
+
     return parser
 
 
@@ -104,6 +109,23 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         for record in records:
             print(f"{record['slug']}\t{record['title']}\t{record['score']}")
+        return 0
+
+    if args.command == "compare":
+        comparison = service.compare_records(list(args.slugs))
+        if args.json:
+            print(json.dumps(comparison, indent=2))
+            return 0
+        if args.markdown:
+            print(service.comparison_markdown(comparison))
+            return 0
+        print(comparison["summary"])
+        print(f"Decision note: {comparison['decision_note']}")
+        for item in comparison["items"]:
+            print(
+                f"- {item['slug']}: {item['score']} | {item['preset']} | "
+                f"{item['provider_status']} | risk: {item['top_risk']}"
+            )
         return 0
 
     parser.error(f"unknown command: {args.command}")

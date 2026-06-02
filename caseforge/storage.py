@@ -24,6 +24,7 @@ class DossierStorage:
         markdown_path = output_dir / "dossier.md"
         json_path = output_dir / "dossier.json"
         summary_path = output_dir / "summary.txt"
+        manifest_path = output_dir / "export-manifest.json"
 
         persisted = replace(
             result,
@@ -32,11 +33,13 @@ class DossierStorage:
             markdown_path=str(markdown_path),
             json_path=str(json_path),
             summary_path=str(summary_path),
+            manifest_path=str(manifest_path),
         )
 
         markdown_path.write_text(persisted.markdown, encoding="utf-8")
         json_path.write_text(json.dumps(persisted.to_dict(), indent=2), encoding="utf-8")
         summary_path.write_text(self._build_summary(persisted), encoding="utf-8")
+        manifest_path.write_text(json.dumps(self._build_manifest(persisted), indent=2), encoding="utf-8")
 
         return persisted
 
@@ -100,6 +103,34 @@ class DossierStorage:
                 f"Slug: {result.slug}",
             ]
         )
+
+    @staticmethod
+    def _build_manifest(result: DossierResult) -> dict[str, object]:
+        return {
+            "slug": result.slug,
+            "title": result.planner.title,
+            "score": result.evaluator.overall_score,
+            "recommendation": result.evaluator.recommendation,
+            "audience": result.brief.audience,
+            "mode": result.brief.mode,
+            "goal": result.brief.goal,
+            "preset": result.brief.preset,
+            "provider": result.brief.provider,
+            "provider_status": result.provider_status,
+            "decision_note": result.storyteller.delivery_hook,
+            "exports": {
+                "markdown": f"outputs/{result.slug}/dossier.md",
+                "json": f"outputs/{result.slug}/dossier.json",
+                "summary": f"outputs/{result.slug}/summary.txt",
+                "manifest": f"outputs/{result.slug}/export-manifest.json",
+            },
+            "review_sequence": [
+                "Read summary.txt for the short handoff.",
+                "Open dossier.md for the full implementation blueprint.",
+                "Inspect dossier.json if another tool needs structured data.",
+                "Compare this run against another saved run before choosing the final implementation path.",
+            ],
+        }
 
     @staticmethod
     def _summary_snippet(payload: dict[str, object]) -> str:

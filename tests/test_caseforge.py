@@ -91,14 +91,20 @@ class CaseForgeTests(unittest.TestCase):
         self.assertTrue(Path(result.markdown_path).exists())
         self.assertTrue(Path(result.json_path).exists())
         self.assertTrue(Path(result.summary_path).exists())
+        self.assertTrue(Path(result.manifest_path).exists())
 
         payload = self.service.to_public_payload(result)
         self.assertEqual(payload["title"], result.planner.title)
         self.assertEqual(payload["markdownPath"], f"outputs/{result.slug}/dossier.md")
         self.assertEqual(payload["jsonPath"], f"outputs/{result.slug}/dossier.json")
         self.assertEqual(payload["summaryPath"], f"outputs/{result.slug}/summary.txt")
+        self.assertEqual(payload["manifestPath"], f"outputs/{result.slug}/export-manifest.json")
         self.assertEqual(len(payload["sections"]), 6)
         self.assertEqual(payload["preset"], "full-stack")
+
+        manifest = json.loads(Path(result.manifest_path).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["exports"]["manifest"], f"outputs/{result.slug}/export-manifest.json")
+        self.assertIn("Compare this run", " ".join(manifest["review_sequence"]))
 
     def test_service_loads_record(self) -> None:
         result = self.service.generate(
@@ -196,6 +202,38 @@ class CaseForgeTests(unittest.TestCase):
         self.assertGreater(len(comparison["decision_note"]), 40)
         self.assertIsInstance(comparison["score_delta"], int)
         self.assertIn(comparison["winner_slug"], {first.slug, second.slug, None})
+
+        markdown = self.service.comparison_markdown(comparison)
+        self.assertIn("# CaseForge Run Comparison", markdown)
+        self.assertIn("Decision note:", markdown)
+        self.assertIn("| Run | Score | Preset | Provider status | Top risk |", markdown)
+
+    def test_intralogistics_brief_generates_commissioning_readiness_plan(self) -> None:
+        brief_path = Path(__file__).resolve().parents[1] / "examples" / "briefs" / "intralogistics-commissioning-planner.md"
+        result = DossierPipeline().run(
+            ProjectBrief(
+                brief=brief_path.read_text(encoding="utf-8"),
+                audience="Commissioning technical lead",
+                mode="Operational planning workspace",
+                goal="Review readiness before handover",
+                preset="product",
+            )
+        )
+
+        combined = " ".join(
+            [
+                result.brief.brief,
+                result.planner.title,
+                result.planner.objective,
+                result.architect.architecture_summary,
+                " ".join(result.architect.modules),
+                " ".join(result.evaluator.mitigations),
+            ]
+        ).lower()
+        self.assertIn("intralogistics", result.brief.brief.lower())
+        self.assertIn("readiness", combined)
+        self.assertIn("validation", combined)
+        self.assertIn("handover", combined)
 
     def test_service_compare_requires_two_unique_slugs(self) -> None:
         with self.assertRaises(ValueError):
@@ -351,6 +389,73 @@ class CaseForgeTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertTrue(payload["preview"])
         self.assertFalse(payload["persisted"])
+
+    def test_cli_compare_emits_markdown(self) -> None:
+        project_root = Path(__file__).resolve().parents[1]
+        first_result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "caseforge",
+                "create",
+                "Build an intralogistics readiness planner with SQL checks and handover notes.",
+                "--audience",
+                "Commissioning lead",
+                "--mode",
+                "Operational planning workspace",
+                "--goal",
+                "Review readiness before handover",
+                "--preset",
+                "product",
+                "--json",
+            ],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        second_result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "caseforge",
+                "create",
+                "Build a release planner with owner actions and risk review.",
+                "--audience",
+                "Engineering lead",
+                "--mode",
+                "Workflow product",
+                "--goal",
+                "Drive implementation clarity",
+                "--preset",
+                "full-stack",
+                "--json",
+            ],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        first = json.loads(first_result.stdout)
+        second = json.loads(second_result.stdout)
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "caseforge",
+                "compare",
+                first["slug"],
+                second["slug"],
+                "--markdown",
+            ],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("# CaseForge Run Comparison", result.stdout)
+        self.assertIn("Decision note:", result.stdout)
 
     def test_service_load_public_payload_normalizes_legacy_interviewer_hook(self) -> None:
         legacy_slug = "legacy-blueprint"

@@ -1,6 +1,6 @@
 # CaseForge Studio
 
-CaseForge Studio turns a rough product idea into an implementation blueprint that a reviewer can inspect before any build work starts. It ships with a local web app, CLI, HTTP API, persisted run history, comparison flow, and an optional OpenAI overlay that refines the final blueprint without becoming the only path through the product.
+CaseForge Studio turns a rough operational software brief into an implementation blueprint that a reviewer can inspect before any build work starts. It ships with a local web app, CLI, HTTP API, persisted run history, export manifests, comparison flow, and an optional OpenAI overlay that refines the final blueprint without becoming the only path through the product.
 
 The core thesis is simple: a useful idea should become scoped, explainable, comparable, and ready for a delivery conversation. CaseForge turns vague prompts into reviewable artifacts instead of treating the generated text as the final answer.
 
@@ -8,7 +8,7 @@ The core thesis is simple: a useful idea should become scoped, explainable, comp
 
 - Turning a rough implementation brief into a structured planning dossier that can be reviewed before coding starts.
 - Comparing two alternate delivery framings when the first generated plan is not strong enough.
-- Producing Markdown, JSON, and summary artifacts that make a planning run easy to hand off or revisit later.
+- Producing Markdown, JSON, summary, and export-manifest artifacts that make a planning run easy to hand off or revisit later.
 - Demonstrating how an optional AI provider can sit behind a deterministic product path instead of becoming the whole product.
 
 ## What This Project Proves
@@ -23,15 +23,16 @@ The core thesis is simple: a useful idea should become scoped, explainable, comp
 
 - **Problem:** rough implementation ideas are often too vague to estimate, review, or hand off cleanly.
 - **First command:** `powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1`
-- **Proof artifact:** a persisted dossier bundle under `outputs/<slug>/` with Markdown, JSON, and summary files.
+- **Proof artifact:** a persisted dossier bundle under `outputs/<slug>/` with Markdown, JSON, summary, and export-manifest files.
 - **Visual proof:** `docs/screenshots/web-app.png` and `docs/screenshots/web-app-mobile.png` show the local planning workspace.
-- **Validation:** 19 unittest tests cover deterministic generation, saved runs, comparison, API behavior, and fallback paths.
+- **Validation:** unittest coverage for deterministic generation, saved runs, export manifests, comparison, API behavior, and fallback paths.
 - **Current limitation:** the OpenAI refinement layer is optional; the public demo is intentionally deterministic and local-first.
 
 ## Product Surface
 
 - Planner, architect, evaluator, and delivery-path stages
 - Markdown, JSON, and summary export under `outputs/` for persisted local runs
+- Export manifest that tells reviewers which artifact to open first and why
 - Local web app with readiness feedback, blueprint preview, saved-run browsing, export bundle, and comparison
 - Local HTTP API for generation, preview, retrieval, and compare flows
 - Optional OpenAI Responses API overlay with deterministic fallback
@@ -74,13 +75,13 @@ For a repeatable local review, run:
 powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1
 ```
 
-The script installs the package, runs the unittest suite, previews a deterministic blueprint from a committed brief, persists a saved run, and prints the recent-run list. After that, start the web app and compare two saved runs to inspect the practical product loop:
+The script installs the package, runs the unittest suite, previews a deterministic blueprint from a committed intralogistics readiness brief, persists two saved runs, compares them, and prints the recent-run list. After that, start the web app and inspect the same saved-run comparison visually:
 
 ```powershell
 python -m caseforge serve --host 127.0.0.1 --port 8127
 ```
 
-This path gives a reviewer one clear chain: rough brief -> deterministic dossier -> saved artifact bundle -> comparison decision.
+This path gives a reviewer one clear chain: rough brief -> deterministic dossier -> saved artifact bundle -> export manifest -> comparison decision.
 
 ## Demo Screenshot
 
@@ -94,10 +95,10 @@ From the `caseforge-studio` project root:
 python -m pip install -e .
 ```
 
-Generate a saved blueprint:
+Generate a saved intralogistics blueprint:
 
 ```powershell
-python -m caseforge create "Build a release readiness planner that turns incident notes, service metrics, and owner comments into an action plan with risks, owners, checks, and next steps."
+python -m caseforge create --brief-file examples/briefs/intralogistics-commissioning-planner.md --preset product
 ```
 
 Preview a blueprint without persistence:
@@ -164,6 +165,12 @@ List recent blueprints:
 
 ```powershell
 python -m caseforge list
+```
+
+Compare two persisted blueprints:
+
+```powershell
+python -m caseforge compare <slug-a> <slug-b> --markdown
 ```
 
 Open a persisted record:

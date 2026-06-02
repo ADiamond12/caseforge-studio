@@ -56,6 +56,7 @@ class DossierService:
         markdown_path = self._public_record_path(record, "markdown_path", slug)
         json_path = self._public_record_path(record, "json_path", slug)
         summary_path = self._public_record_path(record, "summary_path", slug)
+        manifest_path = self._public_record_path(record, "manifest_path", slug)
         return {
             "slug": record.get("slug", slug),
             "title": record.get("planner", {}).get("title", slug),
@@ -68,6 +69,8 @@ class DossierService:
             "json_path": json_path,
             "summaryPath": summary_path,
             "summary_path": summary_path,
+            "manifestPath": manifest_path,
+            "manifest_path": manifest_path,
             "preset": record.get("brief", {}).get("preset", "general"),
             "provider": record.get("brief", {}).get("provider", "deterministic"),
             "providerModel": overlay_dict.get("model") or record.get("brief", {}).get("provider_model"),
@@ -328,4 +331,35 @@ class DossierService:
             f"Start from {winner['title']}: it leads {loser['title']} by {score_delta} readiness points "
             "and gives the clearer implementation handoff. Keep the alternate run as a source of risks, "
             "requirements, or framing that may still be useful."
+        )
+
+    @staticmethod
+    def comparison_markdown(comparison: dict[str, object]) -> str:
+        items = comparison.get("items", [])
+        rows = []
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    rows.append(
+                        "| {title} | {score} | {preset} | {provider} | {risk} |".format(
+                            title=str(item.get("title", "")),
+                            score=str(item.get("score", "")),
+                            preset=str(item.get("preset", "")),
+                            provider=str(item.get("provider_status", item.get("provider", ""))),
+                            risk=str(item.get("top_risk", "")).replace("|", "/"),
+                        )
+                    )
+        return "\n".join(
+            [
+                "# CaseForge Run Comparison",
+                "",
+                str(comparison.get("summary", "")),
+                "",
+                f"Decision note: {comparison.get('decision_note', '')}",
+                "",
+                "| Run | Score | Preset | Provider status | Top risk |",
+                "| --- | --- | --- | --- | --- |",
+                *rows,
+                "",
+            ]
         )

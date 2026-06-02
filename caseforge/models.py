@@ -86,27 +86,30 @@ class DossierResult:
     markdown_path: str
     json_path: str
     summary_path: str
+    manifest_path: str = ""
     provider_status: str = "deterministic"
     provider_message: str = "Deterministic pipeline used."
     provider_overlay: ProviderOverlay | None = None
 
-    def _public_paths(self) -> tuple[str, str, str, str]:
+    def _public_paths(self) -> tuple[str, str, str, str, str]:
         if not self.output_dir:
-            return "", "", "", ""
+            return "", "", "", "", ""
 
         output_dir = Path("outputs") / Path(self.output_dir).name
         markdown_path = output_dir / Path(self.markdown_path).name if self.markdown_path else Path()
         json_path = output_dir / Path(self.json_path).name if self.json_path else Path()
         summary_path = output_dir / Path(self.summary_path).name if self.summary_path else Path()
+        manifest_path = output_dir / Path(self.manifest_path).name if self.manifest_path else Path()
         return (
             output_dir.as_posix(),
             markdown_path.as_posix() if self.markdown_path else "",
             json_path.as_posix() if self.json_path else "",
             summary_path.as_posix() if self.summary_path else "",
+            manifest_path.as_posix() if self.manifest_path else "",
         )
 
     def to_dict(self) -> dict[str, object]:
-        output_dir, markdown_path, json_path, summary_path = self._public_paths()
+        output_dir, markdown_path, json_path, summary_path, manifest_path = self._public_paths()
         return {
             "brief": asdict(self.brief),
             "created_at": self.created_at.astimezone(timezone.utc).isoformat(),
@@ -120,6 +123,7 @@ class DossierResult:
             "markdown_path": markdown_path,
             "json_path": json_path,
             "summary_path": summary_path,
+            "manifest_path": manifest_path,
             "provider_status": self.provider_status,
             "provider_message": self.provider_message,
             "provider_overlay": asdict(self.provider_overlay) if self.provider_overlay else None,
@@ -193,7 +197,7 @@ class DossierResult:
         )
 
     def to_public_dict(self) -> dict[str, object]:
-        _, markdown_path, json_path, summary_path = self._public_paths()
+        _, markdown_path, json_path, summary_path, manifest_path = self._public_paths()
         return {
             "slug": self.slug,
             "title": self.planner.title,
@@ -206,6 +210,8 @@ class DossierResult:
             "json_path": json_path,
             "summaryPath": summary_path,
             "summary_path": summary_path,
+            "manifestPath": manifest_path,
+            "manifest_path": manifest_path,
             "preset": self.brief.preset,
             "provider": self.brief.provider,
             "providerModel": self.provider_overlay.model if self.provider_overlay else self.brief.provider_model,
