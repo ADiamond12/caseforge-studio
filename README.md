@@ -19,6 +19,15 @@ The core thesis is simple: a useful idea should become scoped, explainable, comp
 - Saved runs and comparison views make iteration concrete instead of relying on a single generated answer.
 - Fast to evaluate in a handoff: brief in, blueprint out, compare runs, choose the strongest implementation path.
 
+## Reviewer Proof
+
+- **Problem:** rough implementation ideas are often too vague to estimate, review, or hand off cleanly.
+- **First command:** `powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1`
+- **Proof artifact:** a persisted dossier bundle under `outputs/<slug>/` with Markdown, JSON, and summary files.
+- **Visual proof:** `docs/screenshots/web-app.png` and `docs/screenshots/web-app-mobile.png` show the local planning workspace.
+- **Validation:** 19 unittest tests cover deterministic generation, saved runs, comparison, API behavior, and fallback paths.
+- **Current limitation:** the OpenAI refinement layer is optional; the public demo is intentionally deterministic and local-first.
+
 ## Product Surface
 
 - Planner, architect, evaluator, and delivery-path stages
