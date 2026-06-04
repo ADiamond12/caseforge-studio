@@ -101,6 +101,13 @@ Generate a saved intralogistics blueprint:
 python -m caseforge create --brief-file examples/briefs/intralogistics-commissioning-planner.md --preset product
 ```
 
+Write artifacts to a separate review folder when running demos, tests, or shared machines:
+
+```powershell
+$env:CASEFORGE_OUTPUT_ROOT="$PWD\.caseforge-review-output"
+python -m caseforge create --brief-file examples/briefs/intralogistics-commissioning-planner.md --preset product
+```
+
 Preview a blueprint without persistence:
 
 ```powershell
@@ -144,6 +151,7 @@ Supported environment variables:
 - `OPENAI_MODEL`
 - `OPENAI_RESPONSES_ENDPOINT`
 - `OPENAI_BASE_URL` remains supported as a legacy alias and must point to the full Responses API endpoint.
+- `CASEFORGE_OUTPUT_ROOT` controls where saved Markdown, JSON, summary, and export-manifest artifacts are written.
 
 See [.env.example](.env.example) for the default shape.
 

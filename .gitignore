@@ -16,6 +16,7 @@ Thumbs.db
 *.sqlite3
 .*.log
 outputs/
+.caseforge-review-output/
 build/
 dist/
 *.egg-info/

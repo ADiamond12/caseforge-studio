@@ -10,6 +10,7 @@ Current capture:
 Refresh flow:
 
 ```powershell
+$env:CASEFORGE_OUTPUT_ROOT="$PWD\.caseforge-review-output"
 python -m caseforge serve --host 127.0.0.1 --port 8127
 ```
 

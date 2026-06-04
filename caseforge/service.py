@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from .models import DossierResult, ProjectBrief
@@ -11,11 +12,17 @@ from .storage import DossierStorage
 class DossierService:
     def __init__(self, output_root: Path | None = None) -> None:
         project_root = Path(__file__).resolve().parent.parent
-        self.output_root = (output_root or project_root / "outputs").resolve()
+        configured_output_root = output_root or self._output_root_from_env() or project_root / "outputs"
+        self.output_root = configured_output_root.resolve()
         self.output_root.mkdir(parents=True, exist_ok=True)
         self.pipeline = DossierPipeline()
         self.providers = ProviderRegistry()
         self.storage = DossierStorage(self.output_root)
+
+    @staticmethod
+    def _output_root_from_env() -> Path | None:
+        value = os.environ.get("CASEFORGE_OUTPUT_ROOT", "").strip()
+        return Path(value) if value else None
 
     def generate(self, brief: ProjectBrief) -> DossierResult:
         staged = self.providers.apply(brief, self.pipeline.run(brief))

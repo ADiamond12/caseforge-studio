@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -33,6 +34,7 @@ class CaseForgeTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.output_root = Path(self.temp_dir.name)
         self.service = DossierService(output_root=self.output_root)
+        self.cli_env = {**os.environ, "CASEFORGE_OUTPUT_ROOT": str(self.output_root)}
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
@@ -105,6 +107,14 @@ class CaseForgeTests(unittest.TestCase):
         manifest = json.loads(Path(result.manifest_path).read_text(encoding="utf-8"))
         self.assertEqual(manifest["exports"]["manifest"], f"outputs/{result.slug}/export-manifest.json")
         self.assertIn("Compare this run", " ".join(manifest["review_sequence"]))
+
+    def test_service_can_use_configured_output_root_from_environment(self) -> None:
+        env_output_root = self.output_root / "cli-artifacts"
+        with patch.dict(os.environ, {"CASEFORGE_OUTPUT_ROOT": str(env_output_root)}):
+            service = DossierService()
+
+        self.assertEqual(service.output_root, env_output_root.resolve())
+        self.assertTrue(env_output_root.exists())
 
     def test_service_loads_record(self) -> None:
         result = self.service.generate(
@@ -361,6 +371,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         payload = json.loads(result.stdout)
         self.assertIn("title", payload)
@@ -385,6 +396,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         payload = json.loads(result.stdout)
         self.assertTrue(payload["preview"])
@@ -413,6 +425,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         second_result = subprocess.run(
             [
@@ -435,6 +448,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         first = json.loads(first_result.stdout)
         second = json.loads(second_result.stdout)
@@ -453,6 +467,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         self.assertIn("# CaseForge Run Comparison", result.stdout)
         self.assertIn("Decision note:", result.stdout)
@@ -511,6 +526,7 @@ class CaseForgeTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=self.cli_env,
         )
         self.assertTrue(result.stdout.strip() in {"No blueprints found.", ""} or "\t" in result.stdout)
 

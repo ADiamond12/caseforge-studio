@@ -17,6 +17,15 @@ Use this storyboard for a short public-safe walkthrough. The brief is synthetic 
 - `docs/screenshots/web-app.png`: generated dossier, export bundle, saved runs, and compare controls visible.
 - `docs/screenshots/web-app-mobile.png`: same flow on a narrow viewport.
 
+## Clean Output Folder
+
+For a repeatable reviewer run that keeps generated artifacts out of the working tree, set:
+
+```powershell
+$env:CASEFORGE_OUTPUT_ROOT="$PWD\.caseforge-review-output"
+python -m caseforge serve --host 127.0.0.1 --port 8127
+```
+
 ## What To Say
 
 CaseForge is not a chatbot wrapper. The value is the reviewable planning workflow: it turns a rough brief into a structured implementation dossier, persists the result, and lets a reviewer compare alternate runs before committing to a build path.
