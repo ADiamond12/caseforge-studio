@@ -28,6 +28,10 @@ The core thesis is simple: a useful idea should become scoped, explainable, comp
 - **Validation:** unittest coverage for deterministic generation, saved runs, export manifests, comparison, API behavior, and fallback paths.
 - **Current limitation:** the OpenAI refinement layer is optional; the public demo is intentionally deterministic and local-first.
 
+## OpsForge Module Contract
+
+`docs/opsforge-module-contract.json` defines how this repo fits the OpsForge Suite planning layer: accepted brief inputs, generated handoff artifacts, proof files, deployment shape, safety boundaries, and known limitations. The contract is covered by the unittest suite so the module stays explicit instead of becoming a loose demo.
+
 ## Product Surface
 
 - Planner, architect, evaluator, and delivery-path stages
@@ -137,13 +141,9 @@ python -m build
 
 ## Optional OpenAI Overlay
 
-The live provider path is optional. Without credentials, the app falls back to the deterministic path and explains why.
+The live provider path is optional. The reviewer demo should use the deterministic path; it does not require credentials and does not send sample briefs to an external provider.
 
-```powershell
-$env:OPENAI_API_KEY="your-key"
-$env:OPENAI_MODEL="gpt-5-mini"
-python -m caseforge create "Build an AI operations copilot." --preset ml --provider openai --preview --json
-```
+If you intentionally configure the provider in a private local environment, set the supported environment variables outside the repository and run with `--provider openai`. Without that configuration, the app falls back to the deterministic path and explains why.
 
 Supported environment variables:
 

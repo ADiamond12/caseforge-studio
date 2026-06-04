@@ -1,0 +1,41 @@
+{
+  "module_id": "opsforge-planning-workspace",
+  "repo": "caseforge-studio",
+  "suite_role": "Operational planning workspace",
+  "status": "product-grade local module",
+  "primary_user": "engineering lead or software commissioning engineer preparing an implementation handoff",
+  "input_types": [
+    "technical implementation brief",
+    "affected systems",
+    "delivery constraints",
+    "risk level",
+    "handover target"
+  ],
+  "output_artifacts": [
+    "implementation dossier",
+    "architecture notes",
+    "test plan",
+    "risk register",
+    "deployment checklist",
+    "handover checklist",
+    "export manifest"
+  ],
+  "proof_artifacts": [
+    "docs/screenshots/web-app.png",
+    "docs/screenshots/web-app-mobile.png",
+    "outputs/<slug>/export-manifest.json"
+  ],
+  "local_demo_command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run_demo.ps1",
+  "deployment_shape": "local web app, CLI, HTTP API, deterministic output path, optional backend provider overlay",
+  "safety_boundaries": [
+    "deterministic mode is the default reviewer path",
+    "external provider use is optional and configured server-side",
+    "synthetic operations briefs only",
+    "no private workplace data in demo artifacts"
+  ],
+  "limitations": [
+    "not a multi-user SaaS deployment",
+    "provider-refined output still requires human review",
+    "export bundles are local filesystem artifacts in this release"
+  ]
+}
