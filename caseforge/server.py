@@ -9,6 +9,9 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from .service import DossierService
 
+MAX_REQUEST_BYTES = 1024 * 1024
+LOCAL_HOSTNAMES = {"localhost", "127.0.0.1", "[::1]"}
+
 
 def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
     service = DossierService()
@@ -17,7 +20,11 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
     outputs_root = project_root / "outputs"
 
     class Handler(BaseHTTPRequestHandler):
+        timeout = 10
+
         def do_GET(self) -> None:  # noqa: N802
+            if not self._check_local_request():
+                return
             parsed = urlsplit(self.path)
             path = unquote(parsed.path)
             query = parse_qs(parsed.query)
@@ -65,21 +72,42 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
             self._json_response({"error": f"unknown route: {path}"}, status=HTTPStatus.NOT_FOUND)
 
         def do_POST(self) -> None:  # noqa: N802
+            if not self._check_local_request():
+                return
             path = unquote(urlsplit(self.path).path)
             if path not in {"/api/dossiers", "/api/dossiers/preview"}:
                 self._json_response({"error": f"unknown route: {path}"}, status=HTTPStatus.NOT_FOUND)
                 return
 
-            content_length = int(self.headers.get("Content-Length", "0") or "0")
-            raw_body = self.rfile.read(content_length)
+            if self.headers.get("Content-Type") is None or self.headers.get_content_type() != "application/json":
+                self._json_response({"error": "application/json is required"}, status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+                return
+            lengths = self.headers.get_all("Content-Length", [])
+            if self.headers.get("Transfer-Encoding") is not None or len(lengths) != 1:
+                self._json_response({"error": "one content length is required"}, status=HTTPStatus.BAD_REQUEST)
+                return
+            length = lengths[0].strip()
+            if not length.isascii() or not length.isdecimal():
+                self._json_response({"error": "invalid content length"}, status=HTTPStatus.BAD_REQUEST)
+                return
+            if len(length) > len(str(MAX_REQUEST_BYTES)) or int(length) > MAX_REQUEST_BYTES:
+                self._json_response({"error": "request body too large"}, status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+                return
+            raw_body = self.rfile.read(int(length))
+            if len(raw_body) != int(length):
+                self._json_response({"error": "incomplete request body"}, status=HTTPStatus.BAD_REQUEST)
+                return
             try:
-                payload = json.loads(raw_body.decode("utf-8") or "{}")
-            except json.JSONDecodeError:
+                payload = json.loads(raw_body.decode("utf-8"))
+            except (UnicodeDecodeError, ValueError, RecursionError):
                 self._json_response({"error": "invalid json payload"}, status=HTTPStatus.BAD_REQUEST)
                 return
+            if not isinstance(payload, dict):
+                self._json_response({"error": "JSON object is required"}, status=HTTPStatus.BAD_REQUEST)
+                return
 
-            brief = str(payload.get("brief", "")).strip()
-            if not brief:
+            brief = payload.get("brief")
+            if not isinstance(brief, str) or not brief.strip():
                 self._json_response({"error": "`brief` is required"}, status=HTTPStatus.BAD_REQUEST)
                 return
 
@@ -94,6 +122,16 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
         def log_message(self, format: str, *args: object) -> None:
             return
 
+        def _check_local_request(self) -> bool:
+            hosts = self.headers.get_all("Host", [])
+            permitted = {f"{hostname}:{self.server.server_port}" for hostname in LOCAL_HOSTNAMES}
+            if len(hosts) == 1 and (authority := hosts[0].lower()) in permitted:
+                origins = self.headers.get_all("Origin", [])
+                if not origins or origins == [f"http://{authority}"]:
+                    return True
+            self._json_response({"error": "local same-origin requests only"}, status=HTTPStatus.FORBIDDEN)
+            return False
+
         def _serve_file(self, path: Path, *, allowed_root: Path | None = None) -> None:
             try:
                 resolved = path.resolve(strict=True)
@@ -104,11 +142,17 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
             if allowed_root is not None and not resolved.is_relative_to(allowed_root):
                 self._json_response({"error": "path escapes allowed root"}, status=HTTPStatus.FORBIDDEN)
                 return
+            if not resolved.is_file() or (
+                allowed_root is not None and resolved.suffix.lower() not in {".json", ".md", ".txt"}
+            ):
+                self._json_response({"error": "file not found"}, status=HTTPStatus.NOT_FOUND)
+                return
 
             content_type, _ = mimetypes.guess_type(resolved.name)
             body = resolved.read_bytes()
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type or "application/octet-stream")
+            self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -117,6 +161,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8127) -> int:
             body = json.dumps(payload, indent=2).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
